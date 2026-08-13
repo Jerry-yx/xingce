@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>申论大作文 · 素材积累系统</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          "PingFang SC",
+          Roboto,
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #f4f7fb;
+        padding: 20px;
+        color: #1e2a41;
+      }
+      .container {
+        max-width: 1300px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 28px;
+        box-shadow: 0 20px 40px -12px rgba(0, 20, 30, 0.25);
+        padding: 24px 28px 32px;
+      }
+      h1 {
+        font-size: 26px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        color: #0b2a4a;
+        letter-spacing: 0.3px;
+      }
+      .subhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        border-bottom: 2px solid #e9eef3;
+        padding-bottom: 16px;
+        margin-bottom: 22px;
+      }
+      .subhead span {
+        color: #3b5a7a;
+        font-size: 15px;
+        background: #eef3f9;
+        padding: 4px 14px;
+        border-radius: 40px;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .btn {
+        background: white;
+        border: 1px solid #cfddee;
+        padding: 8px 20px;
+        border-radius: 60px;
+        font-weight: 500;
+        font-size: 14px;
+        color: #1e3b5c;
+        cursor: pointer;
+        transition: all 0.15s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-primary {
+        background: #1e3b5c;
+        border-color: #1e3b5c;
+        color: white;
+        box-shadow: 0 4px 8px -4px rgba(26, 60, 110, 0.25);
+      }
+      .btn-primary:hover {
+        background: #143049;
+        border-color: #143049;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid #b7ccdf;
+      }
+      .btn-outline:hover {
+        background: #eef4fa;
+      }
+      .btn-success {
+        background: #1f7840;
+        border-color: #1f7840;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #155d32;
+      }
+      .btn-warning {
+        background: #b45f2b;
+        border-color: #b45f2b;
+        color: white;
+      }
+      .btn-warning:hover {
+        background: #964d22;
+      }
+      .row-modules {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+        margin: 28px 0 32px;
+      }
+      .module-card {
+        background: #f9fcff;
+        border-radius: 20px;
+        padding: 18px 16px 16px;
+        border: 1px solid #dee9f2;
+        box-shadow: 0 4px 8px -6px rgba(0, 0, 0, 0.04);
+      }
+      .module-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #163351;
+        border-bottom: 2px solid #d6e3f0;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .module-card textarea {
+        width: 100%;
+        border: 1px solid #d4e0ec;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+        resize: vertical;
+        min-height: 110px;
+        line-height: 1.6;
+        transition: 0.1s;
+        color: #142b40;
+      }
+      .module-card textarea:focus {
+        border-color: #3b7a9e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(48, 108, 158, 0.15);
+      }
+      .daily-section {
+        background: #f2f7fd;
+        border-radius: 24px;
+        padding: 22px 24px 18px;
+        margin: 30px 0 20px;
+        border: 1px solid #dae6f2;
+      }
+      .daily-section h2 {
+        font-size: 19px;
+        font-weight: 600;
+        color: #10324e;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .daily-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px 20px;
+      }
+      .daily-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .daily-item label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #1e3f62;
+        letter-spacing: 0.2px;
+      }
+      .daily-item input,
+      .daily-item select {
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid #cbdbea;
+        background: white;
+        font-size: 14px;
+        width: 100%;
+        transition: 0.1s;
+        font-family: inherit;
+      }
+      .daily-item input:focus,
+      .daily-item select:focus {
+        border-color: #2b6c94;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(43, 108, 148, 0.12);
+      }
+      .output-area {
+        background: #f0f5fa;
+        border-radius: 20px;
+        padding: 20px 22px;
+        margin-top: 30px;
+        border: 1px solid #d6e2ef;
+        position: relative;
+      }
+      .output-area h3 {
+        font-size: 17px;
+        font-weight: 600;
+        color: #15344f;
+        margin-bottom: 12px;
+      }
+      .output-area pre {
+        background: #ffffff;
+        padding: 18px 20px;
+        border-radius: 16px;
+        border: 1px solid #d2dfee;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: "SF Mono", "Menlo", "Consolas", monospace;
+        font-size: 13.5px;
+        max-height: 380px;
+        overflow-y: auto;
+        line-height: 1.65;
+        color: #0d263b;
+      }
+      .action-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 18px 0 8px;
+      }
+      .badge {
+        background: #d7e5f5;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #1d4466;
+      }
+      .footer-tip {
+        font-size: 13px;
+        color: #3f5f7c;
+        background: #e6eff8;
+        border-radius: 40px;
+        padding: 6px 18px;
+        display: inline-block;
+      }
+      @media (max-width: 680px) {
+        .container {
+          padding: 16px;
+        }
+        .row-modules {
+          grid-template-columns: 1fr;
+        }
+        .daily-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media print {
+        .btn,
+        .toolbar {
+          display: none;
+        }
+        .container {
+          box-shadow: none;
+        }
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="app">
+      <div class="subhead">
+        <h1>📘 申论大作文 · 素材仓库</h1>
+        <span>📌 4大模块 + 每日输入 + 一键导出</span>
+      </div>
+
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <button class="btn btn-primary" id="exportAllBtn">📥 导出全部素材 (TXT)</button>
+        <button class="btn btn-success" id="exportDailyBtn">📋 导出今日记录</button>
+        <button class="btn btn-warning" id="clearDailyBtn">🗑️ 清空今日输入</button>
+        <button class="btn btn-outline" id="loadSampleBtn">📂 载入示例数据</button>
+        <span class="badge" style="margin-left: auto">自动保存至 localStorage</span>
+      </div>
+
+      <!-- 4大模块卡片 -->
+      <div class="row-modules" id="moduleContainer">
+        <!-- 模块一 -->
+        <div class="module-card">
+          <h3>① 政策词 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">12-15个</span></h3>
+          <textarea id="module1" placeholder="高质量发展 | 新发展格局 | 中国式现代化 …"></textarea>
+        </div>
+        <!-- 模块二 -->
+        <div class="module-card">
+          <h3>② 经典案例 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">8-10个</span></h3>
+          <textarea id="module2" placeholder="乡村振兴：浙江千万工程（浙江/20年/美丽乡村）&#10;科技：华为芯片突破 …"></textarea>
+        </div>
+        <!-- 模块三 -->
+        <div class="module-card">
+          <h3>③ 数据/事实 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">5-6个</span></h3>
+          <textarea id="module3" placeholder="GDP 120万亿 | 脱贫近1亿人 | 研发投入2.5% …"></textarea>
+        </div>
+        <!-- 模块四 -->
+        <div class="module-card">
+          <h3>④ 金句/用典 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">6-8句</span></h3>
+          <textarea id="module4" placeholder="民为邦本本固邦宁（民生）&#10;治大国如烹小鲜（精细治理）"></textarea>
+        </div>
+      </div>
+
+      <!-- 每日积累输入 -->
+      <div class="daily-section">
+        <h2>📝 每日积累 · 输入区</h2>
+        <div class="daily-grid">
+          <div class="daily-item">
+            <label>📅 日期</label>
+            <input type="date" id="dailyDate" />
+          </div>
+          <div class="daily-item">
+            <label>📌 主题</label>
+            <input type="text" id="dailyTopic" placeholder="如：乡村振兴 / 科技创新" value="乡村振兴" />
+          </div>
+          <div class="daily-item">
+            <label>📖 核心观点</label>
+            <input type="text" id="dailyCore" placeholder="从文章提炼的核心观点" />
+          </div>
+          <div class="daily-item">
+            <label>📎 案例关键词</label>
+            <input type="text" id="dailyCase" placeholder="谁 + 在哪 + 做了什么" />
+          </div>
+          <div class="daily-item">
+            <label>✨ 金句</label>
+            <input type="text" id="dailyQuote" placeholder="今日金句（含出处/适用话题）" />
+          </div>
+          <div class="daily-item">
+            <label>📊 数据（选填）</label>
+            <input type="text" id="dailyData" placeholder="如：森林覆盖率24%" />
+          </div>
+        </div>
+        <div style="margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap">
+          <button class="btn btn-primary" id="addDailyBtn">➕ 记录今日积累</button>
+          <button class="btn btn-outline" id="resetDailyBtn">🔄 清空输入框</button>
+        </div>
+        <div
+          style="margin-top: 14px; background: #e3edf6; padding: 10px 16px; border-radius: 50px; font-size: 14px; color: #1f4465"
+          id="dailyFeedback"
+        >
+          ⏳ 今日尚未记录
+        </div>
+      </div>
+
+      <!-- 输出/导出区 -->
+      <div class="output-area">
+        <h3>📤 导出预览 / 素材总览</h3>
+        <pre id="outputPreview">点击“导出全部素材”或“导出今日记录”查看内容。</pre>
+        <div class="action-group">
+          <button class="btn btn-primary" id="exportAllBtn2">📥 导出全部素材 (TXT)</button>
+          <button class="btn btn-success" id="exportDailyBtn2">📋 导出今日记录</button>
+          <button class="btn btn-outline" id="copyOutputBtn">📄 复制预览内容</button>
+        </div>
+        <div style="margin-top: 10px">
+          <span class="footer-tip">💾 所有模块内容自动保存在浏览器中，刷新不丢失</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // DOM 引用
+        const m1 = document.getElementById("module1");
+        const m2 = document.getElementById("module2");
+        const m3 = document.getElementById("module3");
+        const m4 = document.getElementById("module4");
+        const dailyDate = document.getElementById("dailyDate");
+        const dailyTopic = document.getElementById("dailyTopic");
+        const dailyCore = document.getElementById("dailyCore");
+        const dailyCase = document.getElementById("dailyCase");
+        const dailyQuote = document.getElementById("dailyQuote");
+        const dailyData = document.getElementById("dailyData");
+        const dailyFeedback = document.getElementById("dailyFeedback");
+        const outputPreview = document.getElementById("outputPreview");
+
+        // 存储键
+        const STORAGE_KEY = "shenlun_material_v1";
+        const DAILY_KEY = "shenlun_daily_v1";
+
+        // 默认示例数据（符合文章中的4大模块）
+        const DEFAULT_MODULES = {
+          m1: "",
+          m2: "",
+          m3: "",
+          m4: "",
+        };
+
+        // 加载存储数据
+        function loadFromStorage() {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            try {
+              const data = JSON.parse(saved);
+              m1.value = data.m1 || "";
+              m2.value = data.m2 || "";
+              m3.value = data.m3 || "";
+              m4.value = data.m4 || "";
+            } catch (e) {
+              setDefaultModules();
+            }
+          } else {
+            setDefaultModules();
+          }
+
+          // 加载每日记录
+          const dailySaved = localStorage.getItem(DAILY_KEY);
+          if (dailySaved) {
+            try {
+              const d = JSON.parse(dailySaved);
+              if (d.date) dailyDate.value = d.date;
+              if (d.topic) dailyTopic.value = d.topic;
+              if (d.core) dailyCore.value = d.core;
+              if (d.case) dailyCase.value = d.case;
+              if (d.quote) dailyQuote.value = d.quote;
+              if (d.data) dailyData.value = d.data;
+              updateDailyFeedback(d);
+            } catch (e) {
+              /* ignore */
+            }
+          } else {
+            // 默认日期今日
+            const today = new Date().toISOString().split("T")[0];
+            dailyDate.value = today;
+          }
+        }
+
+        function setDefaultModules() {
+          m1.value = DEFAULT_MODULES.m1;
+          m2.value = DEFAULT_MODULES.m2;
+          m3.value = DEFAULT_MODULES.m3;
+          m4.value = DEFAULT_MODULES.m4;
+          saveModules();
+        }
+
+        function saveModules() {
+          const data = {
+            m1: m1.value,
+            m2: m2.value,
+            m3: m3.value,
+            m4: m4.value,
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function saveDaily(dailyObj) {
+          localStorage.setItem(DAILY_KEY, JSON.stringify(dailyObj));
+          updateDailyFeedback(dailyObj);
+        }
+
+        function updateDailyFeedback(d) {
+          if (d && d.date) {
+            const parts = [];
+            if (d.topic) parts.push("主题:" + d.topic);
+            if (d.core) parts.push("观点:" + d.core.substring(0, 12) + "…");
+            if (d.case) parts.push("案例:" + d.case.substring(0, 10) + "…");
+            if (d.quote) parts.push("金句:" + d.quote.substring(0, 10) + "…");
+            dailyFeedback.innerHTML = "✅ 今日已记录 · " + (parts.join(" ") || " 内容完整");
+          } else {
+            dailyFeedback.innerHTML = "⏳ 今日尚未记录，填写后点击“记录今日积累”";
+          }
+        }
+
+        // 获取当前每日对象
+        function getDailyObject() {
+          return {
+            date: dailyDate.value,
+            topic: dailyTopic.value.trim(),
+            core: dailyCore.value.trim(),
+            case: dailyCase.value.trim(),
+            quote: dailyQuote.value.trim(),
+            data: dailyData.value.trim(),
+          };
+        }
+
+        // 记录今日积累
+        function recordDaily() {
+          const d = getDailyObject();
+          if (!d.date) {
+            alert("请选择日期");
+            return;
+          }
+          if (!d.topic && !d.core && !d.case && !d.quote && !d.data) {
+            alert("请至少填写一项内容");
+            return;
+          }
+          saveDaily(d);
+          // 同时追加到对应模块（根据主题智能推荐，但这里只做记录）
+          // 把今日案例追加到模块二？ 保留用户自主权，不自动追加，避免覆盖。
+          // 但给用户提示
+          dailyFeedback.innerHTML = "✅ 已保存！ 记得手动将素材整理到上方4大模块中。";
+          // 同时将输入内容显示在输出预览
+          const dailyText = buildDailyText(d);
+          outputPreview.textContent = "📌 今日积累已保存：\n" + dailyText;
+        }
+
+        function buildDailyText(d) {
+          let lines = [];
+          lines.push("📅 " + (d.date || "未填"));
+          if (d.topic) lines.push("▪ 主题：" + d.topic);
+          if (d.core) lines.push("▪ 核心观点：" + d.core);
+          if (d.case) lines.push("▪ 案例关键词：" + d.case);
+          if (d.quote) lines.push("▪ 金句：" + d.quote);
+          if (d.data) lines.push("▪ 数据：" + d.data);
+          return lines.join("\n");
+        }
+
+        // 构建全部素材导出文本
+        function buildFullExport() {
+          let result = "📘 申论大作文 · 素材仓库（4大模块）\n";
+          result += "━".repeat(48) + "\n\n";
+          result += "【模块一 · 政策词】\n" + (m1.value || "（未填写）") + "\n\n";
+          result += "【模块二 · 经典案例】\n" + (m2.value || "（未填写）") + "\n\n";
+          result += "【模块三 · 数据/事实】\n" + (m3.value || "（未填写）") + "\n\n";
+          result += "【模块四 · 金句/用典】\n" + (m4.value || "（未填写）") + "\n\n";
+          result += "━".repeat(48) + "\n";
+          result += "📌 导出时间：" + new Date().toLocaleString() + "\n";
+          result += "💾 素材持续更新，坚持积累。";
+          return result;
+        }
+
+        // 导出全部素材
+        function exportAll() {
+          const content = buildFullExport();
+          outputPreview.textContent = content;
+          downloadTxt(content, "申论素材_全部模块.txt");
+        }
+
+        // 导出今日记录
+        function exportDaily() {
+          const d = getDailyObject();
+          if (!d.date && !d.topic && !d.core && !d.case && !d.quote && !d.data) {
+            alert("今日尚无积累记录，请先填写内容。");
+            return;
+          }
+          const text = "📋 每日积累记录\n" + buildDailyText(d);
+          outputPreview.textContent = text;
+          downloadTxt(text, "申论每日积累_" + (d.date || "今日") + ".txt");
+        }
+
+        function downloadTxt(content, filename) {
+          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        }
+
+        // 清空今日输入
+        function clearDaily() {
+          dailyTopic.value = "";
+          dailyCore.value = "";
+          dailyCase.value = "";
+          dailyQuote.value = "";
+          dailyData.value = "";
+          // 但保留日期
+          const today = new Date().toISOString().split("T")[0];
+          dailyDate.value = today;
+          localStorage.removeItem(DAILY_KEY);
+          dailyFeedback.innerHTML = "🗑️ 已清空今日记录，可重新输入。";
+          outputPreview.textContent = "已清空今日输入。";
+        }
+
+        // 加载示例数据（覆盖模块）
+        function loadSample() {
+          if (confirm("将覆盖当前4大模块内容，确定吗？")) {
+            m1.value = DEFAULT_MODULES.m1;
+            m2.value = DEFAULT_MODULES.m2;
+            m3.value = DEFAULT_MODULES.m3;
+            m4.value = DEFAULT_MODULES.m4;
+            saveModules();
+            outputPreview.textContent = "✅ 已加载示例素材（4大模块）。可继续编辑或导出。";
+            alert("示例数据已加载！");
+          }
+        }
+
+        // 复制预览内容
+        function copyOutput() {
+          const text = outputPreview.textContent;
+          if (!text || text === "点击“导出全部素材”或“导出今日记录”查看内容。") {
+            alert("暂无内容可复制，请先导出。");
+            return;
+          }
+          navigator.clipboard
+            .writeText(text)
+            .then(() => {
+              alert("✅ 已复制到剪贴板");
+            })
+            .catch(() => {
+              // fallback
+              const area = document.createElement("textarea");
+              area.value = text;
+              document.body.appendChild(area);
+              area.select();
+              document.execCommand("copy");
+              document.body.removeChild(area);
+              alert("✅ 已复制");
+            });
+        }
+
+        // 重置每日输入框（不清除存储）
+        function resetDailyInputs() {
+          dailyTopic.value = "";
+          dailyCore.value = "";
+          dailyCase.value = "";
+          dailyQuote.value = "";
+          dailyData.value = "";
+          // 保留日期
+        }
+
+        // 事件绑定
+        document.getElementById("addDailyBtn").addEventListener("click", recordDaily);
+        document.getElementById("resetDailyBtn").addEventListener("click", resetDailyInputs);
+        document.getElementById("exportAllBtn").addEventListener("click", exportAll);
+        document.getElementById("exportAllBtn2").addEventListener("click", exportAll);
+        document.getElementById("exportDailyBtn").addEventListener("click", exportDaily);
+        document.getElementById("exportDailyBtn2").addEventListener("click", exportDaily);
+        document.getElementById("clearDailyBtn").addEventListener("click", clearDaily);
+        document.getElementById("loadSampleBtn").addEventListener("click", loadSample);
+        document.getElementById("copyOutputBtn").addEventListener("click", copyOutput);
+
+        // 模块内容自动保存
+        [m1, m2, m3, m4].forEach((t) => {
+          t.addEventListener("input", saveModules);
+        });
+
+        // 初始化
+        loadFromStorage();
+
+        // 自动预览：点击导出全部时展示
+        window.exportAllPreview = function () {
+          outputPreview.textContent = buildFullExport();
+        };
+
+        // 额外：点击输出区的导出全部按钮预览
+        document.querySelector("#exportAllBtn2")?.addEventListener("click", function () {
+          // 但已经在exportAll里做了
+        });
+
+        // 显示初始提示
+        if (outputPreview.textContent.trim() === "点击“导出全部素材”或“导出今日记录”查看内容。") {
+          // 保留
+        }
+
+        // 按日期加载每日记录时自动填充反馈
+        const savedDaily = localStorage.getItem(DAILY_KEY);
+        if (savedDaily) {
+          try {
+            const d = JSON.parse(savedDaily);
+            updateDailyFeedback(d);
+          } catch (e) {}
+        }
+      })();
+      // 注册Service Worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then(function (registration) {
+            console.log("Service Worker 注册成功！");
+          })
+          .catch(function (error) {
+            console.log("Service Worker 注册失败:", error);
+          });
+      }
+    </script>
+  </body>
+</html>
