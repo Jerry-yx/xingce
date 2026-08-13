@@ -3,9 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="manifest" href="/manifest.json" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>每日复盘表 · 可输入交互</title>
+  <title>每日复盘表 · 完整版</title>
   <style>
     * {
       box-sizing: border-box;
@@ -17,13 +16,13 @@
       background: #eef2f7;
       display: flex;
       justify-content: center;
-      /* padding: 30px 16px; */
       font-family: "Segoe UI", "PingFang SC", Roboto, system-ui, sans-serif;
+      /* padding: 16px; */
     }
 
     .replay-card {
-      /* max-width: 1100px; */
       width: 100%;
+      /* max-width: 1200px; */
       background: #ffffff;
       border-radius: 32px;
       box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.25);
@@ -37,7 +36,7 @@
       align-items: baseline;
       border-bottom: 3px solid #1a2b4c;
       padding-bottom: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
       gap: 8px;
     }
@@ -69,6 +68,44 @@
       border-radius: 40px;
       font-weight: 500;
       border: 1px dashed #4c6a8f;
+    }
+
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+
+    .nav-tabs button {
+      background: transparent;
+      border: none;
+      padding: 8px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #4a5b79;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .nav-tabs button:hover {
+      background: #eef2f8;
+    }
+
+    .nav-tabs button.active {
+      background: #1a2b4c;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .module {
@@ -189,24 +226,6 @@
       min-width: 220px;
     }
 
-    .stat-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px 28px;
-      background: #eef4fd;
-      border-radius: 16px;
-      padding: 10px 18px;
-      margin: 10px 0 4px;
-      align-items: center;
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 14px;
-    }
-
     .word-pair-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -259,6 +278,11 @@
       min-width: 40px;
       width: 65px;
       flex: 0 0 65px;
+    }
+
+    .word-pair input.pair-content {
+      flex: 2;
+      min-width: 100px;
     }
 
     .error-stat {
@@ -341,69 +365,6 @@
       border-radius: 12px;
     }
 
-    .inline-code {
-      background: #eef3fc;
-      border-radius: 6px;
-      padding: 0 8px;
-      font-family: monospace;
-      font-size: 13px;
-    }
-
-    .mt-1 {
-      margin-top: 8px;
-    }
-
-    .flex {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-    }
-
-    @media (max-width: 760px) {
-      .replay-card {
-        padding: 18px 14px;
-      }
-
-      .sub-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .word-pair-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .header h1 {
-        font-size: 22px;
-      }
-
-      .module-title {
-        font-size: 18px;
-      }
-    }
-
-    .stat-label {
-      font-weight: 500;
-      color: #1f3b62;
-      font-size: 13px;
-    }
-
-    .clear-btn {
-      background: #eef2f8;
-      border: 1px solid #cbd8ec;
-      border-radius: 30px;
-      padding: 2px 18px;
-      font-size: 13px;
-      color: #1f3450;
-      cursor: pointer;
-      transition: 0.2s;
-      margin-left: 8px;
-    }
-
-    .clear-btn:hover {
-      background: #dce3ef;
-    }
-
     .footer-tip {
       display: flex;
       justify-content: flex-end;
@@ -425,6 +386,277 @@
     .footer-tip button:hover {
       background: #e6edf8;
     }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .summary-card {
+      background: #f4f8ff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      border: 1px solid #d5e0f0;
+    }
+
+    .summary-card h3 {
+      color: #1a2b4c;
+      font-size: 16px;
+      border-bottom: 2px solid #cbd8ec;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .summary-card .item {
+      padding: 4px 0;
+      font-size: 14px;
+      border-bottom: 1px dotted #e2e8f0;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card .item .date-tag {
+      color: #4a5b79;
+      font-weight: 500;
+      min-width: 80px;
+    }
+
+    .summary-card .item .content {
+      color: #0a1e38;
+    }
+
+    .history-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: #f4f8ff;
+      border-radius: 16px;
+      border: 1px solid #d5e0f0;
+    }
+
+    .history-bar label {
+      font-weight: 600;
+      color: #1f3b62;
+    }
+
+    .history-bar select {
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid #cbd8ec;
+      background: white;
+      font-size: 14px;
+      min-width: 160px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .history-bar select:focus {
+      border-color: #2f4b7a;
+      box-shadow: 0 0 0 3px rgba(47, 75, 122, 0.15);
+    }
+
+    .history-bar .date-count {
+      color: #4a5b79;
+      font-size: 13px;
+      margin-left: auto;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 16px;
+    }
+
+    .compare-card {
+      background: #f4f8ff;
+      border-radius: 14px;
+      padding: 14px 18px;
+      border: 1px solid #d5e0f0;
+    }
+
+    .compare-card .date-header {
+      font-weight: 700;
+      color: #1a2b4c;
+      border-bottom: 2px solid #cbd8ec;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .compare-card .line {
+      font-size: 13px;
+      padding: 3px 0;
+      border-bottom: 1px dotted #e2e8f0;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .compare-card .line .key {
+      color: #4a5b79;
+      min-width: 70px;
+    }
+
+    .compare-card .line .val {
+      color: #0a1e38;
+    }
+
+    .empty-tip {
+      color: #7a8aa8;
+      text-align: center;
+      padding: 30px 0;
+      font-size: 15px;
+    }
+
+    .history-module-block {
+      background: #fafcff;
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      border: 1px solid #e2e8f2;
+    }
+
+    .history-module-block .mod-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #122a4a;
+      border-bottom: 2px solid #d7e2f0;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+
+    .history-module-block .field-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      padding: 3px 0;
+      font-size: 14px;
+    }
+
+    .history-module-block .field-line .flabel {
+      font-weight: 600;
+      color: #2f4b7a;
+      min-width: 80px;
+    }
+
+    .history-module-block .field-line .fvalue {
+      color: #0a1e38;
+    }
+
+    .history-module-block .field-line .fcell {
+      display: inline-flex;
+      white-space: nowrap;
+    }
+
+    .compare-card .line {
+      align-items: flex-start;
+    }
+
+    .compare-card .line .key {
+      font-weight: 600;
+      color: #1a2b4c;
+      min-width: 70px;
+    }
+
+    .compare-card .line .val {
+      color: #0a1e38;
+      flex: 1;
+      min-width: 0;
+      line-height: 1.7;
+    }
+
+    .compare-card .line .val .group-row {
+      display: block;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      margin: 6px 0 2px;
+    }
+
+    .tech-item {
+      display: flex;
+      align-items: baseline;
+      border-bottom: 1px dotted #cbd8ec;
+      padding: 4px 0;
+      font-size: 14px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tech-item .tlabel {
+      color: #2f5280;
+      font-weight: 500;
+      min-width: 45px;
+    }
+
+    .tech-item input {
+      border: none;
+      border-bottom: 2px dotted #b2c6e6;
+      background: transparent;
+      padding: 2px 4px;
+      font-size: 14px;
+      width: auto;
+      min-width: 60px;
+      outline: none;
+      font-weight: 500;
+      color: #002a6b;
+      flex: 1;
+    }
+
+    .tech-item input:focus {
+      border-bottom-color: #2f4b7a;
+      background: #f2f8ff;
+    }
+
+    @media (max-width: 760px) {
+      .replay-card {
+        padding: 18px 14px;
+      }
+
+      .sub-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .word-pair-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tech-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 22px;
+      }
+
+      .module-title {
+        font-size: 18px;
+      }
+
+      .history-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .history-bar .date-count {
+        margin-left: 0;
+      }
+    }
   </style>
 </head>
 
@@ -434,252 +666,322 @@
     <div class="header">
       <h1>
         📋 每日复盘表
-        <small>可输入 · 交互版</small>
+        <small>完整版</small>
       </h1>
-      <span class="badge-print">📅 2026.08.13 周四</span>
+      <span class="badge-print" id="headerDate">📅 加载中...</span>
     </div>
 
-    <!-- ========= 言语理解 ========= -->
-    <div class="module">
-      <div class="module-title">
-        🧠 言语理解
-        <span class="tag">2套 · 80题</span>
-      </div>
-      <div class="sub-grid">
-        <div class="sub-item">
-          <div class="label">⏱️ 计时 <span>第1套 ≤35min / 第2套 ≤40min</span></div>
-          <div class="field">
-            <input type="text" placeholder="min" class="small" id="言_计时1" /> /
-            <input type="text" placeholder="min" class="small" id="言_计时2" />
+    <!-- ===== 导航标签 ===== -->
+    <div class="nav-tabs">
+      <button class="active" data-tab="tab-input">✏️ 今日输入</button>
+      <button data-tab="tab-history">📅 历史记录</button>
+      <button data-tab="tab-summary">📊 汇总视图</button>
+      <button data-tab="tab-compare">📈 模块对比</button>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TAB 1: 今日输入 -->
+    <!-- ========================================================= -->
+    <div class="tab-content active" id="tab-input">
+
+      <!-- 言语理解 -->
+      <div class="module">
+        <div class="module-title">🧠 言语理解 <span class="tag">2套 · 80题</span></div>
+        <div class="sub-grid">
+          <div class="sub-item">
+            <div class="label">⏱️ 计时 <span>第1套 ≤35min / 第2套 ≤40min</span></div>
+            <div class="field">
+              <input type="text" placeholder="min" class="small" id="言_计时1" /> /
+              <input type="text" placeholder="min" class="small" id="言_计时2" />
+            </div>
+            <div class="label" style="margin-top:10px;">⭕ 画圈题号 (犹豫/纠结)</div>
+            <div class="field"><input type="text" placeholder="填词画圈" class="medium" id="言_画圈" /></div>
+            <div class="field"><input type="text" placeholder="言语画圈" class="medium" id="言_画圈2" /></div>
+            <div class="label" style="margin-top:10px;">❌ 错题题号</div>
+            <div class="field"><input type="text" placeholder="填词错题" class="medium" id="言_错题" /></div>
+            <div class="field"><input type="text" placeholder="言语错题" class="medium" id="言_错题2" /></div>
           </div>
-          <div class="label" style="margin-top: 10px">⭕ 填词画圈题号 (犹豫/纠结)</div>
-          <div class="field"><input type="text" placeholder="例: 12,34,56" class="medium" id="言_画圈" /></div>
-          <div class="label" style="margin-top: 10px">⭕ 言语画圈题号 (犹豫/纠结)</div>
-          <div class="field"><input type="text" placeholder="例: 12,34,56" class="medium" id="言_画圈2" /></div>
-        </div>
-        <div class="sub-item">
-          <div class="label">❌ 错题题号</div>
-          <div class="field"><input type="text" placeholder="填词错题号" class="medium" id="言_错题" /></div>
-          <div class="field"><input type="text" placeholder="言语错题号" class="medium" id="言_错题2" /></div>
-          <div class="label" style="margin-top: 10px">📊 中心错因统计</div>
-          <div class="error-stat">
-            <span class="pill">文章类型 1
-              <select class="small" id="言_文章类型1" value="0">
-                <option value="0">科普类</option>
-                <option value="1">原因类</option>
-                <option value="2">对策类</option>
-                <option value="3">历程类</option>
-                <option value="4">新闻类</option>
-                <option value="5">区别联系类</option>
-                <option value="6">说理类</option>
-                <option value="6">并列</option>
-              </select>
-              <input type="text" class="small" id="错误个数1" value="0" /></span>
-            <span class="pill">文章类型 2
-              <select class="small" id="言_文章类型2" value="0">
-                <option value="0">科普类</option>
-                <option value="1">原因类</option>
-                <option value="2">对策类</option>
-                <option value="3">历程类</option>
-                <option value="4">新闻类</option>
-                <option value="5">区别联系类</option>
-                <option value="6">说理类</option>
-                <option value="6">并列</option>
-              </select>
-              <input type="text" class="small" id="错误个数2" value="0" /></span>
-            <span class="pill">文章类型 3
-              <select class="small" id="言_文章类型3" value="0">
-                <option value="0">科普类</option>
-                <option value="1">原因类</option>
-                <option value="2">对策类</option>
-                <option value="3">历程类</option>
-                <option value="4">新闻类</option>
-                <option value="5">区别联系类</option>
-                <option value="6">说理类</option>
-                <option value="6">并列</option>
-              </select>
-              <input type="text" class="small" id="错误个数3" value="0" /></span>
-            <span class="pill">文章类型 4
-              <select class="small" id="言_文章类型4" value="0">
-                <option value="0">科普类</option>
-                <option value="1">原因类</option>
-                <option value="2">对策类</option>
-                <option value="3">历程类</option>
-                <option value="4">新闻类</option>
-                <option value="5">区别联系类</option>
-                <option value="6">说理类</option>
-                <option value="6">并列</option>
-              </select>
-              <input type="text" class="small" id="错误个数4" value="0" /></span>
-            <div>
-              <span class="pill">无中生有 <input type="text" class="small" id="言_无中生有" value="0" /></span>
-              <span class="pill">偷换概念 <input type="text" class="small" id="言_偷换" value="0" /></span>
-              <span class="pill">以偏概全 <input type="text" class="small" id="言_以偏" value="0" /></span>
-              <span class="pill">过度推断 <input type="text" class="small" id="言_过度" value="0" /></span>
+          <div class="sub-item">
+            <div class="label">📊 中心错因统计</div>
+            <div class="error-stat">
+              <span class="pill">文章类型1 <select class="small" id="言_文章类型1">
+                  <option value="0">科普类</option>
+                  <option value="1">原因类</option>
+                  <option value="2">对策类</option>
+                  <option value="3">历程类</option>
+                  <option value="4">新闻类</option>
+                  <option value="5">区别联系类</option>
+                  <option value="6">说理类</option>
+                  <option value="7">并列</option>
+                </select> <input type="text" class="small" id="错误个数1" value="0" /></span>
+              <span class="pill">文章类型2 <select class="small" id="言_文章类型2">
+                  <option value="0">科普类</option>
+                  <option value="1">原因类</option>
+                  <option value="2">对策类</option>
+                  <option value="3">历程类</option>
+                  <option value="4">新闻类</option>
+                  <option value="5">区别联系类</option>
+                  <option value="6">说理类</option>
+                  <option value="7">并列</option>
+                </select> <input type="text" class="small" id="错误个数2" value="0" /></span>
+              <span class="pill">文章类型3 <select class="small" id="言_文章类型3">
+                  <option value="0">科普类</option>
+                  <option value="1">原因类</option>
+                  <option value="2">对策类</option>
+                  <option value="3">历程类</option>
+                  <option value="4">新闻类</option>
+                  <option value="5">区别联系类</option>
+                  <option value="6">说理类</option>
+                  <option value="7">并列</option>
+                </select> <input type="text" class="small" id="错误个数3" value="0" /></span>
+              <span class="pill">文章类型4 <select class="small" id="言_文章类型4">
+                  <option value="0">科普类</option>
+                  <option value="1">原因类</option>
+                  <option value="2">对策类</option>
+                  <option value="3">历程类</option>
+                  <option value="4">新闻类</option>
+                  <option value="5">区别联系类</option>
+                  <option value="6">说理类</option>
+                  <option value="7">并列</option>
+                </select> <input type="text" class="small" id="错误个数4" value="0" /></span>
+              <div>
+                <span class="pill">无中生有 <input type="text" class="small" id="言_无中生有" value="0" /></span>
+                <span class="pill">偷换概念 <input type="text" class="small" id="言_偷换" value="0" /></span>
+                <span class="pill">以偏概全 <input type="text" class="small" id="言_以偏" value="0" /></span>
+                <span class="pill">过度推断 <input type="text" class="small" id="言_过度" value="0" /></span>
+              </div>
             </div>
           </div>
         </div>
+        <div class="label" style="font-weight:600;margin-top:6px;color:#1a3760;">🔤 词对（信号词 “→选”）</div>
+        <div class="word-pair-grid" id="wordPairContainer"></div>
       </div>
 
-      <!-- 词对 10组 -->
-      <div class="label" style="font-weight: 600; margin-top: 6px; color: #1a3760">🔤 词对（信号词 “→选”）</div>
-      <div class="word-pair-grid" id="wordPairContainer">
-        <!-- 由js动态生成 便于维护 -->
+      <!-- 逻辑判断 -->
+      <div class="module">
+        <div class="module-title">🧩 逻辑判断 <span class="tag">20题 · ≤18min</span></div>
+        <div class="sub-grid">
+          <div class="sub-item">
+            <div class="label">⭕ 画圈题号</div>
+            <div class="field"><input type="text" placeholder="题号" class="medium" id="逻_画圈" /></div>
+            <div class="label" style="margin-top:10px;">❌ 错题题号</div>
+            <div class="field"><input type="text" placeholder="错题号" class="medium" id="逻_错题" /></div>
+            <div class="label" style="margin-top:10px;">★ 题号 (两次都错)</div>
+            <div class="field"><input type="text" placeholder="★题号" class="medium" id="逻_星号" /></div>
+          </div>
+          <div class="sub-item">
+            <div class="label">📉 错因分布</div>
+            <div class="error-stat" style="flex-wrap:wrap;">
+              <span class="pill">因 <input type="text" class="small" id="逻_因" value="0" /></span>
+              <span class="pill">他 <input type="text" class="small" id="逻_他" value="0" /></span>
+              <span class="pill">无 <input type="text" class="small" id="逻_无" value="0" /></span>
+              <span class="pill">反 <input type="text" class="small" id="逻_反" value="0" /></span>
+              <span class="pill">范 <input type="text" class="small" id="逻_范" value="0" /></span>
+              <span class="pill">搭 <input type="text" class="small" id="逻_搭" value="0" /></span>
+              <span class="pill">拆 <input type="text" class="small" id="逻_拆" value="0" /></span>
+            </div>
+            <div class="label" style="margin-top:10px;">🎯 最难追及题号</div>
+            <div class="field"><input type="text" placeholder="题号" class="medium" id="逻_追及" /></div>
+          </div>
+        </div>
+        <div class="special-note" style="font-size:13px;background:#eef4fc;">
+          <span style="font-weight:600;">符号速查：</span> 因=因果倒置 · 他=另有他因 · 无=无关项 · 反=因果反了 · 范=范围扩大/缩小 · 搭=搭桥加强 · 拆=拆桥削弱
+        </div>
       </div>
-    </div>
 
-    <!-- ========= 逻辑判断 ========= -->
-    <div class="module">
-      <div class="module-title">
-        🧩 逻辑判断
-        <span class="tag">20题 · ≤18min</span>
-      </div>
-      <div class="sub-grid">
-        <div class="sub-item">
-          <div class="label">⭕ 画圈题号</div>
-          <div class="field"><input type="text" placeholder="题号" class="medium" id="逻_画圈" /></div>
-          <div class="label" style="margin-top: 10px">❌ 错题题号</div>
-          <div class="field"><input type="text" placeholder="错题号" class="medium" id="逻_错题" /></div>
-          <div class="label" style="margin-top: 10px">★ 题号 (两次都错)</div>
-          <div class="field"><input type="text" placeholder="★题号" class="medium" id="逻_星号" /></div>
-        </div>
-        <div class="sub-item">
-          <div class="label">📉 错因分布</div>
-          <div class="error-stat" style="flex-wrap: wrap">
-            <span class="pill">因 <input type="text" class="small" id="逻_因" value="0" /></span>
-            <span class="pill">他 <input type="text" class="small" id="逻_他" value="0" /></span>
-            <span class="pill">无 <input type="text" class="small" id="逻_无" value="0" /></span>
-            <span class="pill">反 <input type="text" class="small" id="逻_反" value="0" /></span>
-            <span class="pill">范 <input type="text" class="small" id="逻_范" value="0" /></span>
-            <span class="pill">搭 <input type="text" class="small" id="逻_搭" value="0" /></span>
-            <span class="pill">拆 <input type="text" class="small" id="逻_拆" value="0" /></span>
+      <!-- 图推 -->
+      <div class="module">
+        <div class="module-title">🎨 图推 <span class="tag">10题 · ≤7min</span></div>
+        <div class="sub-grid">
+          <div class="sub-item">
+            <div class="label">⭕ 画圈题号</div>
+            <div class="field"><input type="text" placeholder="题号" class="medium" id="图_画圈" /></div>
+            <div class="label" style="margin-top:10px;">❌ 错题题号</div>
+            <div class="field"><input type="text" placeholder="错题号" class="medium" id="图_错题" /></div>
+            <div class="label" style="margin-top:10px;">★ 题号 (新规律)</div>
+            <div class="field"><input type="text" placeholder="★题号" class="medium" id="图_星号" /></div>
           </div>
-          <div class="label" style="margin-top: 10px">🎯 最难追及题号</div>
-          <div class="field"><input type="text" placeholder="题号" class="medium" id="逻_追及" /></div>
-        </div>
-      </div>
-      <div class="special-note" style="font-size: 13px; background: #eef4fc">
-        <span style="font-weight: 600">符号速查：</span> 因=因果倒置 · 他=另有他因 · 无=无关项 · 反=因果反了 · 范=范围扩大/缩小 · 搭=搭桥加强 ·
-        拆=拆桥削弱
-      </div>
-    </div>
-
-    <!-- ========= 图推 ========= -->
-    <div class="module">
-      <div class="module-title">
-        🎨 图推
-        <span class="tag">10题 · ≤7min</span>
-      </div>
-      <div class="sub-grid">
-        <div class="sub-item">
-          <div class="label">⭕ 画圈题号</div>
-          <div class="field"><input type="text" placeholder="题号" class="medium" id="图_画圈" /></div>
-          <div class="label" style="margin-top: 10px">❌ 错题题号</div>
-          <div class="field"><input type="text" placeholder="错题号" class="medium" id="图_错题" /></div>
-          <div class="label" style="margin-top: 10px">★ 题号 (新规律)</div>
-          <div class="field"><input type="text" placeholder="★题号" class="medium" id="图_星号" /></div>
-        </div>
-        <div class="sub-item">
-          <div class="label">🧩 新规律</div>
-          <div class="field"><input type="text" placeholder="描述新规律" class="xlarge" id="图_新规律" /></div>
-          <div class="label pill" style="margin-top: 10px">
-            🔄 重复错规律 <span style="font-weight: 400">(已错 <input type="text" class="small" id="图_重复次数" value="0" /> 次)</span>
-          </div>
-          <div class="field"><input type="text" placeholder="规律描述" class="medium" id="图_重复规律" /></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ========= 资料分析 ========= -->
-    <div class="module">
-      <div class="module-title">
-        📊 资料分析
-        <span class="tag">20题 · ≤27min</span>
-      </div>
-      <div class="sub-grid">
-        <div class="sub-item">
-          <div class="label">⭕ 画圈 (计算复杂/犹豫)</div>
-          <div class="field"><input type="text" placeholder="题号" class="medium" id="资_画圈" /></div>
-          <div class="label" style="margin-top: 10px">❌ 错题题号</div>
-          <div class="field"><input type="text" placeholder="错题号" class="medium" id="资_错题" /></div>
-        </div>
-        <div class="sub-item">
-          <div class="error-stat">
-            <span class="pill">⚙️ 考点类型 <input type="text" style="width: 350px" class="small" id="考点类型" placeholder="类型" /></span>
-          </div>
-          <div class="label">⚙️ 计算路径优化</div>
-          <div class="field">
-            第 <input type="text" class="small" id="资_题号" placeholder="题" /> 题用了
-            <input type="text" class="small" id="资_步数" placeholder="步" /> 步，可缩为
-            <input type="text" class="small" id="资_缩步" placeholder="步" /> 步
-          </div>
-          <div class="label" style="margin-top: 10px">🔢 估算判断</div>
-          <div class="field">
-            选项首位 <input type="text" placeholder="相同/不同" class="medium" id="资_首位" /> → 算到第
-            <input type="text" class="small" id="资_位数" placeholder="位" /> 位即可
+          <div class="sub-item">
+            <div class="label">🧩 新规律</div>
+            <div class="field"><input type="text" placeholder="描述新规律" class="xlarge" id="图_新规律" /></div>
+            <div class="label pill" style="margin-top:10px;">🔄 重复错规律 <span style="font-weight:400;">(已错 <input type="text" class="small" id="图_重复次数" value="0" /> 次)</span></div>
+            <div class="field"><input type="text" placeholder="规律描述" class="medium" id="图_重复规律" /></div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ========= 申论对策 ========= -->
-    <div class="module">
-      <div class="module-title">
-        📝 申论对策
-        <span class="tag">1道 · ≤20min</span>
-      </div>
-      <div class="sub-grid">
-        <div class="sub-item">
-          <div class="label">⏱️ 超时情况</div>
-          <div class="field">
-            超 <input type="text" class="small" id="申_超时" placeholder="min" /> min /
-            <span style="font-weight: 600; margin-left: 4px">未超</span>
-            <input type="text" class="small" id="申_未超" placeholder="✔" style="width: 40px" />
+      <!-- 资料分析 -->
+      <div class="module">
+        <div class="module-title">📊 资料分析 <span class="tag">20题 · ≤27min</span></div>
+        <div class="sub-grid">
+          <div class="sub-item">
+            <div class="label">⭕ 画圈 (计算复杂/犹豫)</div>
+            <div class="field"><input type="text" placeholder="题号" class="medium" id="资_画圈" /></div>
+            <div class="label" style="margin-top:10px;">❌ 错题题号</div>
+            <div class="field"><input type="text" placeholder="错题号" class="medium" id="资_错题" /></div>
+            <div class="label" style="margin-top:10px;">📊 错题个数</div>
+            <div class="field"><input type="text" placeholder="错题总数" class="small" id="资_错题数" value="0" /></div>
           </div>
-          <div class="label" style="margin-top: 10px">✅ 得分关键词 <span style="font-weight: 400">(动词+名词)</span></div>
-          <div class="field">抄到 <input type="text" class="small" id="申_关键词数" placeholder="个" /> 个</div>
-          <div class="field" style="margin-top: 4px"><input type="text" placeholder="关键词" class="xlarge" id="申_关键词" /></div>
-        </div>
-        <div class="sub-item">
-          <div class="label">📌 漏抄关键词</div>
-          <div class="field"><input type="text" placeholder="漏抄词" class="xlarge" id="申_漏抄" /></div>
-          <div class="label" style="margin-top: 10px">💬 说明</div>
-          <div class="field"><input type="text" placeholder="备注" class="xlarge" id="申_说明" /></div>
+          <div class="sub-item">
+            <div class="label">⚙️ 考点类型</div>
+            <div class="field"><input type="text" placeholder="类型" class="xlarge" id="考点类型" /></div>
+            <div class="label" style="margin-top:10px;">⚙️ 计算路径优化 (4组)</div>
+            <div class="tech-grid" id="calcTechGrid"></div>
+            <div class="label" style="margin-top:10px;">🔢 估算判断</div>
+            <div class="field">选项首位 <input type="text" placeholder="相同/不同" class="medium" id="资_首位" /> → 算到第 <input type="text" class="small" id="资_位数" placeholder="位" /> 位即可</div>
+          </div>
         </div>
       </div>
-    </div>
-    <!-- ========= 图例 + 说明 ========= -->
-    <div class="special-note" style="background: #f4f9ff; border-color: #b8cbe5">
-      <div style="display: flex; flex-wrap: wrap; gap: 8px 18px">
-        <div><span style="font-weight: 700">⭕ 画圈</span> = 做题时“不太确定/二选一纠结”（含对/错）</div>
-        <div><span style="font-weight: 700">❌ 错题</span> = 答案直接选错</div>
-        <div><span style="font-weight: 700">★ (逻辑)</span> = 同一道题“做题错+复盘重做又错” → 留周六深挖</div>
-        <div><span style="font-weight: 700">★ (图推)</span> = 新规律 → 留周六整理进“图推规律本”</div>
+
+      <!-- 数量关系（新增） -->
+      <div class="module">
+        <div class="module-title">🔢 数量关系 <span class="tag">10题 · ≤15min</span></div>
+        <div class="sub-grid">
+          <div class="sub-item">
+            <div class="label">⏱️ 计时</div>
+            <div class="field"><input type="text" placeholder="min" class="small" id="数_计时" /></div>
+            <div class="label" style="margin-top:10px;">✅ 做对题号</div>
+            <div class="field"><input type="text" placeholder="例: 1,3,5" class="medium" id="数_对题" /></div>
+            <div class="label" style="margin-top:10px;">❌ 错题题号</div>
+            <div class="field"><input type="text" placeholder="错题号" class="medium" id="数_错题" /></div>
+            <div class="label" style="margin-top:10px;">🎯 蒙对题号</div>
+            <div class="field"><input type="text" placeholder="蒙对的题号" class="medium" id="数_蒙对" /></div>
+          </div>
+          <div class="sub-item">
+            <div class="label">📊 错题个数</div>
+            <div class="field"><input type="text" placeholder="错题总数" class="small" id="数_错题数" value="0" /></div>
+            <div class="label" style="margin-top:10px;">📉 错因分类</div>
+            <div class="field"><input type="text" placeholder="行程/排列组合/工程等" class="xlarge" id="数_错因" /></div>
+            <div class="label" style="margin-top:10px;">💡 技巧列表 (5个)</div>
+            <div class="tech-grid" id="skillGrid"></div>
+            <div class="label" style="margin-top:10px;">📝 备注</div>
+            <div class="field"><input type="text" placeholder="其他记录" class="xlarge" id="数_备注" /></div>
+          </div>
+        </div>
       </div>
-      <div class="legend" style="border-top-color: #b7ccf0; margin-top: 10px; padding-top: 10px">
-        <span class="legend-item"><span class="sym">因</span>因果倒置</span>
-        <span class="legend-item"><span class="sym">他</span>另有他因</span>
-        <span class="legend-item"><span class="sym">无</span>无关项</span>
-        <span class="legend-item"><span class="sym">反</span>因果反了</span>
-        <span class="legend-item"><span class="sym">范</span>范围扩大/缩小</span>
-        <span class="legend-item"><span class="sym">搭</span>搭桥加强</span>
-        <span class="legend-item"><span class="sym">拆</span>拆桥削弱</span>
-        <span class="legend-item" style="margin-left: auto; color: #284f7a">✏️ 所有空白均可输入</span>
+
+      <!-- 申论对策 -->
+      <div class="module">
+        <div class="module-title">📝 申论对策 <span class="tag">1道 · ≤20min</span></div>
+        <div class="sub-grid">
+          <div class="sub-item">
+            <div class="label">⏱️ 超时情况</div>
+            <div class="field">超 <input type="text" class="small" id="申_超时" placeholder="min" /> min / <span style="font-weight:600;margin-left:4px;">未超</span> <input type="text" class="small" id="申_未超" placeholder="✔" style="width:40px;" /></div>
+            <div class="label" style="margin-top:10px;">✅ 得分关键词 <span style="font-weight:400;">(动词+名词)</span></div>
+            <div class="field">抄到 <input type="text" class="small" id="申_关键词数" placeholder="个" /> 个</div>
+            <div class="field" style="margin-top:4px;"><input type="text" placeholder="关键词" class="xlarge" id="申_关键词" /></div>
+          </div>
+          <div class="sub-item">
+            <div class="label">📌 漏抄关键词</div>
+            <div class="field"><input type="text" placeholder="漏抄词" class="xlarge" id="申_漏抄" /></div>
+            <div class="label" style="margin-top:10px;">💬 说明</div>
+            <div class="field"><input type="text" placeholder="备注" class="xlarge" id="申_说明" /></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图例 -->
+      <div class="special-note" style="background:#f4f9ff;border-color:#b8cbe5;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px 18px;">
+          <div><span style="font-weight:700;">⭕ 画圈</span> = 做题时“不太确定/二选一纠结”（含对/错）</div>
+          <div><span style="font-weight:700;">❌ 错题</span> = 答案直接选错</div>
+          <div><span style="font-weight:700;">★ (逻辑)</span> = 同一道题“做题错+复盘重做又错” → 留周六深挖</div>
+          <div><span style="font-weight:700;">★ (图推)</span> = 新规律 → 留周六整理进“图推规律本”</div>
+        </div>
+        <div class="legend" style="border-top-color:#b7ccf0;margin-top:10px;padding-top:10px;">
+          <span class="legend-item"><span class="sym">因</span>因果倒置</span>
+          <span class="legend-item"><span class="sym">他</span>另有他因</span>
+          <span class="legend-item"><span class="sym">无</span>无关项</span>
+          <span class="legend-item"><span class="sym">反</span>因果反了</span>
+          <span class="legend-item"><span class="sym">范</span>范围扩大/缩小</span>
+          <span class="legend-item"><span class="sym">搭</span>搭桥加强</span>
+          <span class="legend-item"><span class="sym">拆</span>拆桥削弱</span>
+          <span class="legend-item" style="margin-left:auto;color:#284f7a;">✏️ 所有空白均可输入</span>
+        </div>
+      </div>
+
+      <div class="footer-tip">
+        <button onclick="saveToday()">💾 保存今日记录</button>
+        <button onclick="exportAll()">📤 导出所有数据</button>
+        <button onclick="clearAllInputs()">🗑️ 清空所有输入</button>
+        <span style="color:#5b7397;font-size:13px;align-self:center;">复盘日期: <span id="footerDate">加载中...</span></span>
       </div>
     </div>
 
-    <!-- 底部 -->
-    <div class="footer-tip">
-      <button onclick="saveToday()">💾 保存今日记录</button>
-      <button onclick="exportAll()">📤 导出所有数据</button>
-      <button onclick="clearAllInputs()">🗑️ 清空所有输入</button>
-      <span style="color: #5b7397; font-size: 13px; align-self: center">复盘日期: 2026.08.13 · 拉练记录</span>
+    <!-- ========================================================= -->
+    <!-- TAB 2: 历史记录 -->
+    <!-- ========================================================= -->
+    <div class="tab-content" id="tab-history">
+      <div class="history-bar">
+        <label for="historySelect">📅 选择日期：</label>
+        <select id="historySelect" onchange="loadHistoryDate()">
+          <option value="">-- 请选择 --</option>
+        </select>
+        <span class="date-count" id="historyCount">共 0 天记录</span>
+        <button onclick="refreshHistorySelect()" style="padding:4px 16px;border-radius:30px;border:1px solid #b8cbe5;background:transparent;cursor:pointer;">🔄 刷新</button>
+      </div>
+      <div id="historyContent">
+        <div class="empty-tip">📭 选择上方日期查看当日复盘详情</div>
+      </div>
     </div>
+
+    <!-- ========================================================= -->
+    <!-- TAB 3: 汇总视图 -->
+    <!-- ========================================================= -->
+    <div class="tab-content" id="tab-summary">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <button onclick="refreshSummary()" style="padding:6px 20px;border-radius:30px;border:1px solid #b8cbe5;background:#1a2b4c;color:white;cursor:pointer;">🔄 刷新汇总</button>
+        <span style="color:#4a5b79;align-self:center;">集中显示所有词对、图推规律、数量技巧（同日仅显示一次日期）</span>
+      </div>
+      <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card">
+          <h3>🔤 全部词对汇总</h3>
+          <div id="summaryWordPairs">
+            <div class="empty-tip">暂无数据</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <h3>🎨 图推规律汇总</h3>
+          <div id="summaryFigure">
+            <div class="empty-tip">暂无数据</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <h3>🔢 数量技巧汇总</h3>
+          <div id="summarySkills">
+            <div class="empty-tip">暂无数据</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <h3>📊 资料计算优化汇总</h3>
+          <div id="summaryCalc">
+            <div class="empty-tip">暂无数据</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TAB 4: 模块对比 -->
+    <!-- ========================================================= -->
+    <div class="tab-content" id="tab-compare">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <button onclick="refreshCompare()" style="padding:6px 20px;border-radius:30px;border:1px solid #b8cbe5;background:#1a2b4c;color:white;cursor:pointer;">🔄 刷新对比</button>
+        <span style="color:#4a5b79;align-self:center;">按模块展示每天数据对比</span>
+      </div>
+      <div id="compareContainer">
+        <div class="empty-tip">暂无数据，请先保存复盘记录</div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    // ========== 常量 ==========
+    // ======================================================================
+    // 常量 & 工具
+    // ======================================================================
     const STORAGE_PREFIX = "replay_";
+    const ARTICLE_TYPE_MAP = { 0: "科普类", 1: "原因类", 2: "对策类", 3: "历程类", 4: "新闻类", 5: "区别联系类", 6: "说理类", 7: "并列" };
 
     function getTodayKey() {
       const d = new Date();
@@ -689,379 +991,509 @@
       return STORAGE_PREFIX + y + "-" + m + "-" + day;
     }
 
-    // 获取所有需要收集的 input/select 的 id 列表
+    function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+    function formatDate(dateStr) {
+      const parts = dateStr.split("-");
+      return parts[0] + "年" + parseInt(parts[1]) + "月" + parseInt(parts[2]) + "日";
+    }
+
     function getAllDataIds() {
       const ids = [];
-      // 词对（含词义对比）
-      for (let i = 1; i <= 20; i++) {
-        ids.push("词对_" + i + "_1", "词对_" + i + "_2", "词对_" + i + "_3");
-      }
-      // 言语理解
+      for (let i = 1; i <= 20; i++) ids.push("词对_" + i + "_1", "词对_" + i + "_2", "词对_" + i + "_3");
       ids.push("言_计时1", "言_计时2", "言_画圈", "言_画圈2", "言_错题", "言_错题2");
-      for (let i = 1; i <= 4; i++) {
-        ids.push("言_文章类型" + i, "错误个数" + i);
-      }
+      for (let i = 1; i <= 4; i++) ids.push("言_文章类型" + i, "错误个数" + i);
       ids.push("言_无中生有", "言_偷换", "言_以偏", "言_过度");
-      // 逻辑判断
       ids.push("逻_画圈", "逻_错题", "逻_星号", "逻_因", "逻_他", "逻_无", "逻_反", "逻_范", "逻_搭", "逻_拆", "逻_追及");
-      // 图推
       ids.push("图_画圈", "图_错题", "图_星号", "图_新规律", "图_重复次数", "图_重复规律");
-      // 资料分析
-      ids.push("资_画圈", "资_错题", "考点类型", "资_题号", "资_步数", "资_缩步", "资_首位", "资_位数");
-      // 申论对策
+      ids.push("资_画圈", "资_错题", "资_错题数", "考点类型", "资_首位", "资_位数");
+      for (let i = 1; i <= 4; i++) ids.push("资_优化题" + i, "资_原步" + i, "资_缩步" + i);
+      // 数量
+      ids.push("数_计时", "数_对题", "数_错题", "数_蒙对", "数_错题数", "数_错因", "数_备注");
+      for (let i = 1; i <= 5; i++) ids.push("数_技巧" + i);
       ids.push("申_超时", "申_未超", "申_关键词数", "申_关键词", "申_漏抄", "申_说明");
       return ids;
     }
 
-    // 收集当前页面所有输入值
     function collectData() {
       const data = {};
-      const ids = getAllDataIds();
-      ids.forEach(function (id) {
+      getAllDataIds().forEach(function (id) {
         const el = document.getElementById(id);
-        if (el) {
-          data[id] = el.value;
-        }
+        if (el) data[id] = el.value;
       });
       return data;
     }
 
-    // 恢复数据到页面
     function restoreData(data) {
       if (!data) return;
-      const ids = getAllDataIds();
-      ids.forEach(function (id) {
+      getAllDataIds().forEach(function (id) {
         if (data[id] !== undefined) {
           const el = document.getElementById(id);
-          if (el) {
-            el.value = data[id];
-          }
+          if (el) el.value = data[id];
         }
       });
     }
 
-    // ========== 保存今日记录 ==========
+    function getAllSavedDates() {
+      const dates = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(STORAGE_PREFIX)) dates.push(k.replace(STORAGE_PREFIX, ""));
+      }
+      return dates.sort();
+    }
+
+    function loadDateData(dateStr) {
+      const key = STORAGE_PREFIX + dateStr;
+      const raw = localStorage.getItem(key);
+      if (raw) { try { return JSON.parse(raw); } catch (e) { return null; } }
+      return null;
+    }
+
     function saveToday() {
       const key = getTodayKey();
-      const existing = localStorage.getItem(key);
-      if (existing) {
-        if (!confirm("今日已有记录，是否覆盖？")) {
-          return;
-        }
-      }
-      const data = collectData();
-      localStorage.setItem(key, JSON.stringify(data));
-      alert("保存成功！");
+      if (localStorage.getItem(key) && !confirm("今日已有记录，是否覆盖？")) return;
+      localStorage.setItem(key, JSON.stringify(collectData()));
+      alert("✅ 保存成功！");
+      updateHeaderDate();
+      refreshHistorySelect();
     }
 
-    // ========== 页面加载时恢复当日数据 ==========
     function loadTodayData() {
-      const key = getTodayKey();
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        try {
-          const data = JSON.parse(raw);
-          restoreData(data);
-        } catch (e) {
-          // 数据损坏，忽略
-        }
-      }
+      const raw = localStorage.getItem(getTodayKey());
+      if (raw) { try { restoreData(JSON.parse(raw)); } catch (e) { } }
+      updateHeaderDate();
     }
 
-    // ========== 导出所有数据 ==========
-    // 文章类型值 → 文字映射
-    var ARTICLE_TYPE_MAP = {
-      0: "科普类",
-      1: "原因类",
-      2: "对策类",
-      3: "历程类",
-      4: "新闻类",
-      5: "区别联系类",
-      6: "说理类",
-    };
+    function updateHeaderDate() {
+      const d = new Date();
+      const str = d.getFullYear() + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getDate()).padStart(2,
+        "0");
+      const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+      document.getElementById("headerDate").textContent = "📅 " + str + " 周" + weekdays[d.getDay()];
+      document.getElementById("footerDate").textContent = str + " 周" + weekdays[d.getDay()];
+    }
 
     function exportAll() {
-      var allKeys = [];
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        if (k && k.startsWith(STORAGE_PREFIX)) {
-          allKeys.push(k);
-        }
-      }
-      if (allKeys.length === 0) {
-        alert("暂无保存的数据");
-        return;
-      }
-      allKeys.sort();
-
-      var jsonModules = [
-        { name: "言语理解", prefix: "言_" },
-        { name: "逻辑判断", prefix: "逻_" },
-        { name: "图推", prefix: "图_" },
-        { name: "资料分析", prefix: "资_" },
-        { name: "申论对策", prefix: "申_" },
-        { name: "词对", prefix: "词对_" },
-      ];
-
-      var exportData = [];
-
-      allKeys.forEach(function (key) {
-        var dateStr = key.replace(STORAGE_PREFIX, "");
-        var raw = localStorage.getItem(key);
-        var record;
-        try {
-          record = JSON.parse(raw);
-        } catch (e) {
-          return;
-        }
-
-        var dayEntry = { date: dateStr, modules: {} };
-        jsonModules.forEach(function (mod) {
-          var modData = {};
-          Object.keys(record).forEach(function (fid) {
-            if (fid.startsWith(mod.prefix)) modData[fid] = record[fid];
-          });
-          if (Object.keys(modData).length > 0) dayEntry.modules[mod.name] = modData;
-        });
-        exportData.push(dayEntry);
+      const dates = getAllSavedDates();
+      if (dates.length === 0) { alert("暂无保存的数据"); return; }
+      const exportData = dates.map(function (d) { return { date: d, data: loadDateData(d) }; }).filter(function (item) {
+        return item
+          .data;
       });
-
-      // ===== JSON 下载 =====
       downloadFile(JSON.stringify(exportData, null, 2), "复盘数据_" + todayStr() + ".json", "application/json");
-
-      // ===== 文字版生成：按模块分组，每个模块下列出各日期 =====
-      // 收集每个模块的日期→描述
-      var moduleDays = {}; // { "言语理解": [ { date: "2026-08-13", desc: "..." }, ... ], ... }
-
-      exportData.forEach(function (day) {
-        var r = day.modules;
-        var date = day.date;
-
-        // ── 言语理解 ──
-        if (r["言语理解"]) {
-          var s = r["言语理解"];
-          var parts = [];
-          if (s["言_计时1"] || s["言_计时2"]) parts.push("计时：第1套" + (s["言_计时1"] || "-") + "min，第2套" + (s["言_计时2"] || "-") + "min");
-          if (s["言_画圈"]) parts.push("填词画圈题号：" + s["言_画圈"]);
-          if (s["言_画圈2"]) parts.push("言语画圈题号：" + s["言_画圈2"]);
-          if (s["言_错题"]) parts.push("填词错题号：" + s["言_错题"]);
-          if (s["言_错题2"]) parts.push("言语错题号：" + s["言_错题2"]);
-          var errParts = [];
-          for (var i = 1; i <= 4; i++) {
-            var typeVal = s["言_文章类型" + i];
-            var cntVal = s["错误个数" + i];
-            if ((typeVal && typeVal !== "0") || (cntVal && cntVal !== "0")) {
-              var typeName = ARTICLE_TYPE_MAP[typeVal] || typeVal || "未选";
-              errParts.push("文章类型" + i + "-" + typeName + "×" + (cntVal || "0") + "个");
-            }
-          }
-          if (errParts.length > 0) parts.push("中心错因统计：" + errParts.join("，"));
-          var genErrs = [];
-          if (s["言_无中生有"] && s["言_无中生有"] !== "0") genErrs.push("无中生有" + s["言_无中生有"] + "个");
-          if (s["言_偷换"] && s["言_偷换"] !== "0") genErrs.push("偷换概念" + s["言_偷换"] + "个");
-          if (s["言_以偏"] && s["言_以偏"] !== "0") genErrs.push("以偏概全" + s["言_以偏"] + "个");
-          if (s["言_过度"] && s["言_过度"] !== "0") genErrs.push("过度推断" + s["言_过度"] + "个");
-          if (genErrs.length > 0) parts.push("通用错因：" + genErrs.join("，"));
-          if (r["词对"]) {
-            var wp = r["词对"];
-            var wpParts = [];
-            for (var j = 1; j <= 20; j++) {
-              var w1 = wp["词对_" + j + "_1"],
-                w2 = wp["词对_" + j + "_2"],
-                wc3 = wp["词对_" + j + "_3"];
-              if (w1 || w2 || wc3) wpParts.push("词对" + j + "：" + (w1 || "-") + "→" + (w2 || "-") + (wc3 ? "（" + wc3 + "）" : ""));
-            }
-            if (wpParts.length > 0) parts.push("词对：" + wpParts.join("；"));
-          }
-          addModuleDay("言语理解", date, parts.join("。"));
+      let textLines = [];
+      exportData.forEach(function (item) {
+        textLines.push("══════ " + item.date + " ══════");
+        const d = item.data;
+        let pairs = [];
+        for (let i = 1; i <= 20; i++) {
+          const w1 = d["词对_" + i + "_1"] || "",
+            w2 = d["词对_" + i + "_2"] || "",
+            w3 = d["词对_" + i + "_3"] || "";
+          if (w1 || w2 || w3) pairs.push(w1 + "/" + w2 + (w3 ? "(" + w3 + ")" : ""));
         }
-
-        // ── 逻辑判断 ──
-        if (r["逻辑判断"]) {
-          var s = r["逻辑判断"];
-          var parts = [];
-          if (s["逻_画圈"]) parts.push("画圈题号：" + s["逻_画圈"]);
-          if (s["逻_错题"]) parts.push("错题题号：" + s["逻_错题"]);
-          if (s["逻_星号"]) parts.push("★题号(两次都错)：" + s["逻_星号"]);
-          var cuoYin = [];
-          if (s["逻_因"] && s["逻_因"] !== "0") cuoYin.push("因果倒置" + s["逻_因"] + "个");
-          if (s["逻_他"] && s["逻_他"] !== "0") cuoYin.push("另有他因" + s["逻_他"] + "个");
-          if (s["逻_无"] && s["逻_无"] !== "0") cuoYin.push("无关项" + s["逻_无"] + "个");
-          if (s["逻_反"] && s["逻_反"] !== "0") cuoYin.push("因果反了" + s["逻_反"] + "个");
-          if (s["逻_范"] && s["逻_范"] !== "0") cuoYin.push("范围扩大/缩小" + s["逻_范"] + "个");
-          if (s["逻_搭"] && s["逻_搭"] !== "0") cuoYin.push("搭桥加强" + s["逻_搭"] + "个");
-          if (s["逻_拆"] && s["逻_拆"] !== "0") cuoYin.push("拆桥削弱" + s["逻_拆"] + "个");
-          if (cuoYin.length > 0) parts.push("错因分布：" + cuoYin.join("，"));
-          if (s["逻_追及"]) parts.push("最难追及题号：" + s["逻_追及"]);
-          addModuleDay("逻辑判断", date, parts.join("。"));
-        }
-
-        // ── 图推 ──
-        if (r["图推"]) {
-          var s = r["图推"];
-          var parts = [];
-          if (s["图_画圈"]) parts.push("画圈题号：" + s["图_画圈"]);
-          if (s["图_错题"]) parts.push("错题题号：" + s["图_错题"]);
-          if (s["图_星号"]) parts.push("★题号(新规律)：" + s["图_星号"]);
-          if (s["图_新规律"]) parts.push("新规律：" + s["图_新规律"]);
-          if (s["图_重复次数"] && s["图_重复次数"] !== "0") {
-            var repeatStr = "重复错规律：已错" + s["图_重复次数"] + "次";
-            if (s["图_重复规律"]) repeatStr += "，" + s["图_重复规律"];
-            parts.push(repeatStr);
+        if (pairs.length) textLines.push("词对: " + pairs.join(" | "));
+        if (d["图_新规律"]) textLines.push("图推新规律: " + d["图_新规律"]);
+        if (d["图_重复规律"]) textLines.push("图推重复错: " + d["图_重复规律"] + " (已错" + (d["图_重复次数"] || "0") + "次)");
+        let errs = [];
+        ["因", "他", "无", "反", "范", "搭", "拆"].forEach(function (k) {
+          if (d["逻_" + k] && d["逻_" + k] !== "0") errs.push(k + d[
+            "逻_" + k]);
+        });
+        if (errs.length) textLines.push("逻辑错因: " + errs.join(" "));
+        // 数量技巧
+        let skills = [];
+        for (let i = 1; i <= 5; i++) { if (d["数_技巧" + i]) skills.push(d["数_技巧" + i]); }
+        if (skills.length) textLines.push("数量技巧: " + skills.join(" | "));
+        if (d["数_错因"]) textLines.push("数量错因: " + d["数_错因"]);
+        // 资料计算优化
+        let calcs = [];
+        for (let i = 1; i <= 4; i++) {
+          if (d["资_优化题" + i] || d["资_原步" + i] || d["资_缩步" + i]) {
+            calcs.push("题" + (d["资_优化题" + i] || "?") + ": " + (d["资_原步" + i] || "?") + "步→" + (d["资_缩步" + i] || "?") +
+              "步");
           }
-          addModuleDay("图推", date, parts.join("。"));
         }
-
-        // ── 资料分析 ──
-        if (r["资料分析"]) {
-          var s = r["资料分析"];
-          var parts = [];
-          if (s["资_画圈"]) parts.push("画圈题号：" + s["资_画圈"]);
-          if (s["资_错题"]) parts.push("错题题号：" + s["资_错题"]);
-          if (s["考点类型"]) parts.push("考点类型：" + s["考点类型"]);
-          if (s["资_题号"] || s["资_步数"] || s["资_缩步"]) {
-            parts.push("计算路径优化：第" + (s["资_题号"] || "?") + "题用了" + (s["资_步数"] || "?") + "步，可缩为" + (s["资_缩步"] || "?") + "步");
-          }
-          if (s["资_首位"] || s["资_位数"]) {
-            parts.push("估算判断：选项首位" + (s["资_首位"] || "?") + "，算到第" + (s["资_位数"] || "?") + "位即可");
-          }
-          addModuleDay("资料分析", date, parts.join("。"));
-        }
-
-        // ── 申论对策 ──
-        if (r["申论对策"]) {
-          var s = r["申论对策"];
-          var parts = [];
-          if (s["申_超时"] || s["申_未超"]) {
-            var timeout = [];
-            if (s["申_超时"]) timeout.push("超" + s["申_超时"] + "min");
-            if (s["申_未超"]) timeout.push("未超" + s["申_未超"]);
-            parts.push("超时情况：" + timeout.join("，"));
-          }
-          if (s["申_关键词数"]) parts.push("抄到关键词" + s["申_关键词数"] + "个");
-          if (s["申_关键词"]) parts.push("关键词：" + s["申_关键词"]);
-          if (s["申_漏抄"]) parts.push("漏抄关键词：" + s["申_漏抄"]);
-          if (s["申_说明"]) parts.push("说明：" + s["申_说明"]);
-          addModuleDay("申论对策", date, parts.join("。"));
-        }
+        if (calcs.length) textLines.push("资料优化: " + calcs.join("; "));
+        textLines.push("");
       });
-
-      // 辅助：收集模块日期数据
-      function addModuleDay(modName, date, desc) {
-        if (!moduleDays[modName]) moduleDays[modName] = [];
-        moduleDays[modName].push({ date: date, desc: desc });
-      }
-
-      // 按模块输出
-      var MODULE_ORDER = ["言语理解", "逻辑判断", "图推", "资料分析", "申论对策"];
-      var textLines = [];
-      MODULE_ORDER.forEach(function (modName) {
-        var entries = moduleDays[modName];
-        if (entries && entries.length > 0) {
-          textLines.push("══════ " + modName + " ══════");
-          entries.forEach(function (e) {
-            textLines.push("【" + e.date + "】" + e.desc);
-          });
-          textLines.push("");
-        }
-      });
-
-      if (textLines.length > 0) {
-        downloadFile(textLines.join("\n"), "复盘数据_文字版_" + todayStr() + ".txt", "text/plain");
-      }
-    }
-
-    function todayStr() {
-      return new Date().toISOString().slice(0, 10);
+      downloadFile(textLines.join("\n"), "复盘数据_文字版_" + todayStr() + ".txt", "text/plain");
     }
 
     function downloadFile(content, filename, mimeType) {
-      var blob = new Blob([content], { type: mimeType });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      a.href = url;
+      const blob = new Blob([content], { type: mimeType });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(a.href);
     }
 
-    // ========== 初始化 ==========
+    function clearAllInputs() {
+      if (!confirm("确定清空所有输入框吗？")) return;
+      document.querySelectorAll("input").forEach(function (inp) {
+        if (inp.type === "text" || inp.type === "number") inp.value =
+          "";
+      });
+      ["言_无中生有", "言_偷换", "言_以偏", "言_过度", "逻_因", "逻_他", "逻_无", "逻_反", "逻_范", "逻_搭", "逻_拆", "图_重复次数", "资_错题数",
+        "数_错题数"
+      ].forEach(function (id) { const el = document.getElementById(id); if (el) el.value = "0"; });
+    }
+
+    // ======================================================================
+    // TAB 切换
+    // ======================================================================
+    document.querySelectorAll(".nav-tabs button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".nav-tabs button").forEach(function (b) { b.classList.remove("active"); });
+        this.classList.add("active");
+        const target = this.dataset.tab;
+        document.querySelectorAll(".tab-content").forEach(function (tc) { tc.classList.remove("active"); });
+        document.getElementById(target).classList.add("active");
+        if (target === "tab-history") refreshHistorySelect();
+        if (target === "tab-summary") refreshSummary();
+        if (target === "tab-compare") refreshCompare();
+      });
+    });
+
+    // ======================================================================
+    // 历史记录
+    // ======================================================================
+    function refreshHistorySelect() {
+      const select = document.getElementById("historySelect");
+      const dates = getAllSavedDates();
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">-- 请选择 --</option>';
+      dates.forEach(function (d) {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.textContent = formatDate(d);
+        select.appendChild(opt);
+      });
+      if (currentVal && dates.includes(currentVal)) select.value = currentVal;
+      document.getElementById("historyCount").textContent = "共 " + dates.length + " 天记录";
+      if (select.value) loadHistoryDate();
+    }
+
+    // 模块字段配置（历史/汇总/对比共用）
+    const MODULE_CONFIGS = [{
+      name: "🧠 言语理解",
+      groups: [[
+        { key: "言_计时1", label: "第1套用时" }, { key: "言_计时2", label: "第2套用时" },
+        { key: "言_画圈", label: "填词画圈" }, { key: "言_画圈2", label: "言语画圈" },
+        { key: "言_错题", label: "填词错题" }, { key: "言_错题2", label: "言语错题" },
+        { key: "言_文章类型1", label: "文章类型1", map: ARTICLE_TYPE_MAP }, { key: "错误个数1", label: "错题个数1" },
+        { key: "言_文章类型2", label: "文章类型2", map: ARTICLE_TYPE_MAP }, { key: "错误个数2", label: "错题个数2" },
+        { key: "言_文章类型3", label: "文章类型3", map: ARTICLE_TYPE_MAP }, { key: "错误个数3", label: "错题个数3" },
+        { key: "言_文章类型4", label: "文章类型4", map: ARTICLE_TYPE_MAP }, { key: "错误个数4", label: "错题个数4" },
+        { key: "言_无中生有", label: "无中生有" }, { key: "言_偷换", label: "偷换概念" },
+        { key: "言_以偏", label: "以偏概全" }, { key: "言_过度", label: "过度推断" }
+      ]]
+    }, {
+      name: "🧩 逻辑判断",
+      groups: [
+        [{ key: "逻_画圈", label: "画圈题号" }, { key: "逻_错题", label: "错题题号" }, { key: "逻_星号", label: "★题号" }],
+        [{ key: "逻_因", label: "因(因果倒置)" }, { key: "逻_他", label: "他(另有他因)" },
+        { key: "逻_无", label: "无(无关项)" }, { key: "逻_反", label: "反(因果反了)" },
+        { key: "逻_范", label: "范(范围扩大)" }, { key: "逻_搭", label: "搭(搭桥加强)" },
+        { key: "逻_拆", label: "拆(拆桥削弱)" }, { key: "逻_追及", label: "最难追及题号" }]
+      ]
+    }, {
+      name: "🎨 图推",
+      groups: [[
+        { key: "图_画圈", label: "画圈题号" }, { key: "图_错题", label: "错题题号" }, { key: "图_星号", label: "★题号" },
+        { key: "图_新规律", label: "新规律" }, { key: "图_重复规律", label: "重复错规律" }, { key: "图_重复次数", label: "重复次数" }
+      ]]
+    }, {
+      name: "📊 资料分析",
+      groups: [[
+        { key: "资_画圈", label: "画圈题号" }, { key: "资_错题", label: "错题题号" }, { key: "资_错题数", label: "错题个数" },
+        { key: "考点类型", label: "考点类型" }, { key: "资_首位", label: "选项首位" }, { key: "资_位数", label: "算到第几位" }
+      ]]
+    }, {
+      name: "🔢 数量关系",
+      groups: [[
+        { key: "数_计时", label: "用时(min)" }, { key: "数_对题", label: "做对题号" },
+        { key: "数_错题", label: "错题题号" }, { key: "数_蒙对", label: "蒙对题号" },
+        { key: "数_错题数", label: "错题个数" }, { key: "数_错因", label: "错因分类" }, { key: "数_备注", label: "备注" }
+      ]]
+    }, {
+      name: "📝 申论对策",
+      groups: [
+        [{ key: "申_超时", label: "超时(min)" }, { key: "申_未超", label: "未超" }, { key: "申_关键词数", label: "关键词数" }],
+        [{ key: "申_关键词", label: "关键词" }],
+        [{ key: "申_漏抄", label: "漏抄关键词" }],
+        [{ key: "申_说明", label: "说明" }]
+      ]
+    }];
+
+    // 渲染某日全部模块（不含日期头），供历史/汇总复用
+    function renderDayModules(data) {
+      let html = '';
+      // 词对（每条一行）
+      let pairLines = '';
+      for (let i = 1; i <= 20; i++) {
+        const w1 = data["词对_" + i + "_1"] || '',
+          w2 = data["词对_" + i + "_2"] || '',
+          w3 = data["词对_" + i + "_3"] || '';
+        if (w1 || w2 || w3) {
+          pairLines += '<div class="field-line"><span class="fcell"><span class="flabel">词对' + i + '：</span><span class="fvalue">' + w1 +
+            ' / ' + w2 + (w3 ? ' (' + w3 + ')' : '') + '</span></span></div>';
+        }
+      }
+      if (pairLines) html += '<div class="history-module-block"><div class="mod-title">🔤 词对汇总</div><div class="mod-content">' + pairLines + '</div></div>';
+      // 资料计算优化（每行3个）
+      let calcCells = [];
+      for (let i = 1; i <= 4; i++) {
+        const t = data["资_优化题" + i] || '', a = data["资_原步" + i] || '', b = data["资_缩步" + i] || '';
+        if (t || a || b) calcCells.push('<span class="fcell"><span class="flabel">优化' + i + '：</span><span class="fvalue">题' +
+          (t || '?') + '：' + (a || '?') + '步→' + (b || '?') + '步</span></span>');
+      }
+      let calcLines = '';
+      for (let i = 0; i < calcCells.length; i += 3) calcLines += '<div class="field-line">' + calcCells.slice(i, i + 3).join('') + '</div>';
+      if (calcLines) html += '<div class="history-module-block"><div class="mod-title">⚙️ 资料计算优化</div><div class="mod-content">' + calcLines + '</div></div>';
+      // 数量技巧（每行3个）
+      let skillCells = [];
+      for (let i = 1; i <= 5; i++) {
+        const v = data["数_技巧" + i] || '';
+        if (v) skillCells.push('<span class="fcell"><span class="flabel">技巧' + i + '：</span><span class="fvalue">' + v + '</span></span>');
+      }
+      let skillLines = '';
+      for (let i = 0; i < skillCells.length; i += 3) skillLines += '<div class="field-line">' + skillCells.slice(i, i + 3).join('') + '</div>';
+      if (skillLines) html += '<div class="history-module-block"><div class="mod-title">💡 数量技巧</div><div class="mod-content">' + skillLines + '</div></div>';
+      // 各模块（每组一行）
+      MODULE_CONFIGS.forEach(function (mod) {
+        let lines = '';
+        mod.groups.forEach(function (group) {
+          let cells = '';
+          group.forEach && group.forEach(function (f) {
+            const raw = data[f.key];
+            const val = (raw === undefined || raw === null) ? '' : String(raw);
+            if (val === '' || val === '0') return;
+            const display = f.map ? (f.map[val] || val) : val;
+            cells += '<span class="fcell"><span class="flabel">' + f.label + '：</span><span class="fvalue">' + display + '</span></span>';
+          });
+          if (cells) lines += '<div class="field-line">' + cells + '</div>';
+        });
+        if (lines) {
+          html += '<div class="history-module-block"><div class="mod-title">' + mod.name + '</div><div class="mod-content">' + lines + '</div></div>';
+        }
+      });
+      return html;
+    }
+
+    function loadHistoryDate() {
+      const dateStr = document.getElementById("historySelect").value;
+      const container = document.getElementById("historyContent");
+      if (!dateStr) { container.innerHTML = '<div class="empty-tip">📭 选择上方日期查看当日复盘详情</div>'; return; }
+      const data = loadDateData(dateStr);
+      if (!data) { container.innerHTML = '<div class="empty-tip">📭 该日无数据</div>'; return; }
+      container.innerHTML = renderDayModules(data) || '<div class="empty-tip">📭 该日无有效数据</div>';
+    }
+
+    // ======================================================================
+    // 汇总视图
+    // ======================================================================
+    function refreshSummary() {
+      const dates = getAllSavedDates();
+      let allPairs = [], allFigure = [], allSkills = [], allCalc = [];
+      dates.forEach(function (d) {
+        const data = loadDateData(d);
+        if (!data) return;
+        for (let i = 1; i <= 20; i++) {
+          const w1 = data["词对_" + i + "_1"] || "", w2 = data["词对_" + i + "_2"] || "", w3 = data["词对_" + i + "_3"] || "";
+          if (w1 || w2 || w3) allPairs.push({ date: d, pair: w1 + "/" + w2, note: w3 });
+        }
+        if (data["图_新规律"]) allFigure.push({ date: d, type: "新规律", content: data["图_新规律"] });
+        if (data["图_重复规律"]) allFigure.push({ date: d, type: "重复错", content: data["图_重复规律"] + " (已错" + (data["图_重复次数"] || "0") + "次)" });
+        for (let i = 1; i <= 5; i++) { const v = data["数_技巧" + i] || ""; if (v) allSkills.push({ date: d, content: v }); }
+        for (let i = 1; i <= 4; i++) {
+          const t = data["资_优化题" + i] || "", a = data["资_原步" + i] || "", b = data["资_缩步" + i] || "";
+          if (t || a || b) allCalc.push({ date: d, content: "题" + (t || "?") + "：" + (a || "?") + "步→" + (b || "?") + "步" });
+        }
+      });
+
+      // 渲染：按内容去重并统计出现天数；相同日期只显示最上面那条的日期标签
+      function renderGrouped(items, fmt) {
+        const unique = {};
+        items.forEach(function (p) {
+          const key = fmt.key(p);
+          if (!unique[key]) unique[key] = { obj: p, dates: [] };
+          unique[key].dates.push(p.date);
+        });
+        const list = Object.values(unique).sort(function (a, b) { return a.dates[0] < b.dates[0] ? -1 : 1; });
+        let html = '', lastDate = '';
+        list.forEach(function (item) {
+          const first = item.dates[0], count = item.dates.length;
+          const tag = formatDate(first) + (count > 1 ? ' (+' + (count - 1) + '天)' : '');
+          const showTag = first !== lastDate;
+          lastDate = first;
+          html += '<div class="item"><span class="date-tag">' + (showTag ? tag : '') + '</span><span class="content">' + fmt.text(item.obj) + '</span></div>';
+        });
+        return html;
+      }
+      function fill(id, items, fmt) {
+        const el = document.getElementById(id);
+        el.innerHTML = items.length ? renderGrouped(items, fmt) : '<div class="empty-tip">暂无记录</div>';
+      }
+      fill("summaryWordPairs", allPairs, {
+        key: function (p) { return p.pair + p.note; },
+        text: function (p) { return p.pair + (p.note ? ' (' + p.note + ')' : ''); }
+      });
+      fill("summaryFigure", allFigure, {
+        key: function (p) { return p.type + '||' + p.content; },
+        text: function (p) { return '[' + p.type + '] ' + p.content; }
+      });
+      fill("summarySkills", allSkills, {
+        key: function (p) { return p.content; },
+        text: function (p) { return p.content; }
+      });
+      fill("summaryCalc", allCalc, {
+        key: function (p) { return p.content; },
+        text: function (p) { return p.content; }
+      });
+    }
+
+    // ======================================================================
+    // 模块对比
+    // ======================================================================
+    function refreshCompare() {
+      const dates = getAllSavedDates();
+      const container = document.getElementById("compareContainer");
+      if (!dates.length) { container.innerHTML = '<div class="empty-tip">暂无数据，请先保存复盘记录</div>'; return; }
+      const recent = dates.slice(-5);
+      let html = '<div class="compare-grid">';
+      // 各模块标量字段对比（复用 MODULE_CONFIGS.groups，每组一行）
+      MODULE_CONFIGS.forEach(function (mod) {
+        html += '<div class="compare-card"><div class="date-header">' + mod.name + '</div>';
+        let hasData = false;
+        recent.forEach(function (d) {
+          const data = loadDateData(d);
+          if (!data) return;
+          let groupLines = [];
+          mod.groups.forEach(function (group) {
+            let parts = [];
+            group.forEach && group.forEach(function (f) {
+              const raw = data[f.key];
+              const val = (raw === undefined || raw === null) ? '' : String(raw);
+              if (val === '' || val === '0') return;
+              const display = f.map ? (f.map[val] || val) : val;
+              parts.push('<strong>' + f.label + '</strong>:' + display);
+            });
+            if (parts.length) groupLines.push(parts.join(' '));
+          });
+          if (groupLines.length) {
+            hasData = true;
+            html += '<div class="line"><span class="key">' + formatDate(d) + '</span><div class="val">' + groupLines.map(function (g) { return '<div class="group-row">' + g + '</div>'; }).join('') + '</div></div>';
+          }
+        });
+        if (!hasData) html += '<div style="color:#7a8aa8;font-size:13px;padding:8px 0;">暂无记录</div>';
+        html += '</div>';
+      });
+      // 列表类（词对/资料优化/数量技巧）对比
+      const listSections = [{
+        title: "🔤 词对对比",
+        collect: function (data) {
+          let arr = [];
+          for (let i = 1; i <= 20; i++) {
+            const w1 = data["词对_" + i + "_1"] || '', w2 = data["词对_" + i + "_2"] || '', w3 = data["词对_" + i + "_3"] || '';
+            if (w1 || w2 || w3) arr.push(w1 + '/' + w2 + (w3 ? '(' + w3 + ')' : ''));
+          }
+          return arr;
+        }
+      }, {
+        title: "⚙️ 资料计算优化",
+        collect: function (data) {
+          let arr = [];
+          for (let i = 1; i <= 4; i++) {
+            const t = data["资_优化题" + i] || '', a = data["资_原步" + i] || '', b = data["资_缩步" + i] || '';
+            if (t || a || b) arr.push('题' + (t || '?') + ':' + (a || '?') + '→' + (b || '?'));
+          }
+          return arr;
+        }
+      }, {
+        title: "💡 数量技巧",
+        collect: function (data) {
+          let arr = [];
+          for (let i = 1; i <= 5; i++) { const v = data["数_技巧" + i] || ''; if (v) arr.push(v); }
+          return arr;
+        }
+      }];
+      listSections.forEach(function (sec) {
+        html += '<div class="compare-card"><div class="date-header">' + sec.title + '</div>';
+        let hasData = false;
+        recent.forEach(function (d) {
+          const data = loadDateData(d);
+          if (!data) return;
+          const arr = sec.collect(data);
+          if (arr.length) {
+            hasData = true;
+            html += '<div class="line"><span class="key">' + formatDate(d) + '</span><div class="val">' + arr.map(function (v) { return '<div class="group-row">' + v + '</div>'; }).join('') + '</div></div>';
+          }
+        });
+        if (!hasData) html += '<div style="color:#7a8aa8;font-size:13px;padding:8px 0;">暂无记录</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ======================================================================
+    // 初始化
+    // ======================================================================
     (function () {
-      // 生成词对 10组
+      // 词对
       const container = document.getElementById("wordPairContainer");
       if (container) {
         let html = "";
         for (let i = 1; i <= 20; i++) {
           html +=
-            '<div class="word-pair">' +
-            '<span class="signal">词对' +
-            i +
-            "</span>" +
-            '<input type="text" placeholder="词" class="small-pair" id="词对_' +
-            i +
-            '_1">' +
-            '<span class="slash">/</span>' +
-            '<input type="text" placeholder="选" class="small-pair" id="词对_' +
-            i +
-            '_2">' +
-            '<span class="slash">/</span>' +
-            '<input type="text" placeholder="词义对比" class="pair-content" id="词对_' +
-            i +
-            '_3">' +
-            "</div>";
+            '<div class="word-pair"><span class="signal">词对' + i + '</span><input type="text" placeholder="词" class="small-pair" id="词对_' +
+            i + '_1"><span class="slash">/</span><input type="text" placeholder="选" class="small-pair" id="词对_' + i +
+            '_2"><span class="slash">/</span><input type="text" placeholder="词义对比" class="pair-content" id="词对_' + i +
+            '_3"></div>';
         }
         container.innerHTML = html;
       }
 
-      // 页面加载后恢复当日数据
+      // 资料计算优化4组
+      const calcGrid = document.getElementById("calcTechGrid");
+      if (calcGrid) {
+        let html = '';
+        for (let i = 1; i <= 4; i++) {
+          html += '<div class="tech-item"><span class="tlabel">题</span><input type="text" placeholder="题号" id="资_优化题' +
+            i + '"><span class="tlabel">步</span><input type="text" placeholder="原步" id="资_原步' + i +
+            '"><span class="tlabel">→</span><input type="text" placeholder="缩步" id="资_缩步' + i + '"></div>';
+        }
+        calcGrid.innerHTML = html;
+      }
+
+      // 数量技巧5个
+      const skillGrid = document.getElementById("skillGrid");
+      if (skillGrid) {
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+          html += '<div class="tech-item"><span class="tlabel">技巧' + i + '</span><input type="text" placeholder="技巧描述" id="数_技巧' +
+            i + '"></div>';
+        }
+        skillGrid.innerHTML = html;
+      }
+
       loadTodayData();
+      updateHeaderDate();
+      if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function () { });
     })();
 
-    // 清空所有 input
-    function clearAllInputs() {
-      const inputs = document.querySelectorAll("input");
-      inputs.forEach(function (inp) {
-        if (inp.type === "text" || inp.type === "number") {
-          inp.value = "";
-        }
-      });
-      const resetIds = [
-        "言_无中生有",
-        "言_偷换",
-        "言_以偏",
-        "言_过度",
-        "逻_因",
-        "逻_他",
-        "逻_无",
-        "逻_反",
-        "逻_范",
-        "逻_搭",
-        "逻_拆",
-        "图_重复次数",
-      ];
-      resetIds.forEach(function (id) {
-        const el = document.getElementById(id);
-        if (el) el.value = "0";
-      });
-    }
-
-    // 暴露到全局
     window.saveToday = saveToday;
     window.exportAll = exportAll;
     window.clearAllInputs = clearAllInputs;
-    // 注册Service Worker
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then(function (registration) {
-          console.log("Service Worker 注册成功！");
-        })
-        .catch(function (error) {
-          console.log("Service Worker 注册失败:", error);
-        });
-    }
+    window.refreshHistorySelect = refreshHistorySelect;
+    window.loadHistoryDate = loadHistoryDate;
+    window.refreshSummary = refreshSummary;
+    window.refreshCompare = refreshCompare;
   </script>
 </body>
 

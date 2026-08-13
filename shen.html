@@ -1,685 +1,989 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>申论大作文 · 素材积累系统</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>申论归纳积累 · 交互系统</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #f1f5f9;
+      display: flex;
+      justify-content: center;
+      font-family: "Segoe UI", "PingFang SC", Roboto, system-ui, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1300px;
+      width: 100%;
+      background: white;
+      border-radius: 32px;
+      box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.20);
+      padding: 28px 32px 36px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 3px solid #1a2b4c;
+      padding-bottom: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0b1a33;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header h1 small {
+      font-size: 16px;
+      font-weight: 400;
+      color: #4a5b79;
+      background: #eef2f8;
+      padding: 2px 14px;
+      border-radius: 30px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      background: transparent;
+      border: 1px solid #b8cbe5;
+      padding: 6px 18px;
+      border-radius: 40px;
+      font-size: 13px;
+      color: #1f3b62;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: 500;
+    }
+
+    .btn:hover {
+      background: #e6edf8;
+    }
+
+    .btn-primary {
+      background: #1a2b4c;
+      border-color: #1a2b4c;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0f1f38;
+    }
+
+    .btn-success {
+      background: #1f7840;
+      border-color: #1f7840;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #155d32;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+
+    .tabs button {
+      background: transparent;
+      border: none;
+      padding: 8px 22px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #4a5b79;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .tabs button:hover {
+      background: #eef2f8;
+    }
+
+    .tabs button.active {
+      background: #1a2b4c;
+      color: white;
+    }
+
+    .tab-pane {
+      display: none;
+      animation: fade 0.2s;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0.4;
       }
-      body {
-        font-family:
-          "Segoe UI",
-          "PingFang SC",
-          Roboto,
-          system-ui,
-          -apple-system,
-          sans-serif;
-        background: #f4f7fb;
-        padding: 20px;
-        color: #1e2a41;
+
+      to {
+        opacity: 1;
       }
+    }
+
+    /* 类别选择器 */
+    .category-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .category-bar .cat-btn {
+      background: #f1f5f9;
+      border: 2px solid transparent;
+      padding: 6px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #2d4a6a;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .category-bar .cat-btn:hover {
+      background: #e2eaf3;
+    }
+
+    .category-bar .cat-btn.active {
+      border-color: #1a2b4c;
+      background: #1a2b4c;
+      color: white;
+    }
+
+    .form-section {
+      background: #f8faff;
+      border-radius: 20px;
+      padding: 20px 24px 24px;
+      border: 1px solid #dce6f2;
+      margin-bottom: 28px;
+    }
+
+    .form-section h3 {
+      font-size: 17px;
+      color: #122a4a;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 20px;
+    }
+
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      font-size: 13px;
+      color: #1f3b62;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid #cbd8ec;
+      background: white;
+      font-size: 14px;
+      font-family: inherit;
+      transition: 0.15s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #2f4b7a;
+      box-shadow: 0 0 0 3px rgba(47, 75, 122, 0.12);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* 条目列表 */
+    .entry-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .entry-card {
+      background: #fafcff;
+      border-radius: 14px;
+      padding: 14px 18px;
+      border: 1px solid #e2eaf2;
+      border-left: 6px solid #7a95bd;
+      transition: 0.1s;
+    }
+
+    .entry-card .e-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 16px;
+      margin-bottom: 4px;
+    }
+
+    .entry-card .e-type {
+      background: #dce5f0;
+      padding: 0 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1f3b62;
+    }
+
+    .entry-card .e-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #0a1e38;
+    }
+
+    .entry-card .e-meta {
+      font-size: 12px;
+      color: #5b7397;
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .entry-card .e-content {
+      font-size: 14px;
+      color: #1e334f;
+      margin: 6px 0 4px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .entry-card .e-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      margin-top: 4px;
+    }
+
+    .entry-card .e-tags .tag {
+      background: #e8eff8;
+      padding: 0 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #1f4465;
+    }
+
+    .entry-card .e-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .entry-card .e-actions button {
+      background: transparent;
+      border: none;
+      color: #4a6a8a;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline dotted;
+    }
+
+    .entry-card .e-actions button:hover {
+      color: #b22234;
+    }
+
+    .empty-tip {
+      color: #7a8aa8;
+      text-align: center;
+      padding: 30px 0;
+      font-size: 15px;
+    }
+
+    /* 汇总视图 */
+    .summary-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+
+    .summary-controls .pill {
+      background: #e6edf8;
+      padding: 2px 16px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1a3760;
+      cursor: pointer;
+      transition: 0.1s;
+      border: 2px solid transparent;
+    }
+
+    .summary-controls .pill.active {
+      border-color: #1a2b4c;
+      background: #1a2b4c;
+      color: white;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .summary-card {
+      background: #f8faff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      border: 1px solid #dce6f2;
+    }
+
+    .summary-card h4 {
+      font-size: 15px;
+      color: #122a4a;
+      border-bottom: 2px solid #d7e2f0;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+
+    .summary-card .s-item {
+      padding: 4px 0;
+      font-size: 14px;
+      border-bottom: 1px dotted #e2e8f0;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card .s-item .scat {
+      color: #4a5b79;
+      font-weight: 500;
+      min-width: 70px;
+    }
+
+    .summary-card .s-item .scontent {
+      color: #0a1e38;
+    }
+
+    /* 响应式 */
+    @media (max-width: 780px) {
       .container {
-        max-width: 1300px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 28px;
-        box-shadow: 0 20px 40px -12px rgba(0, 20, 30, 0.25);
-        padding: 24px 28px 32px;
+        padding: 16px 14px;
       }
-      h1 {
-        font-size: 26px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 6px;
-        color: #0b2a4a;
-        letter-spacing: 0.3px;
+
+      .form-grid {
+        grid-template-columns: 1fr;
       }
-      .subhead {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        border-bottom: 2px solid #e9eef3;
-        padding-bottom: 16px;
-        margin-bottom: 22px;
+
+      .form-grid .full {
+        grid-column: 1;
       }
-      .subhead span {
-        color: #3b5a7a;
-        font-size: 15px;
-        background: #eef3f9;
-        padding: 4px 14px;
-        border-radius: 40px;
+
+      .summary-grid {
+        grid-template-columns: 1fr;
       }
-      .toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 28px;
+
+      .header h1 {
+        font-size: 22px;
       }
-      .btn {
-        background: white;
-        border: 1px solid #cfddee;
-        padding: 8px 20px;
-        border-radius: 60px;
-        font-weight: 500;
-        font-size: 14px;
-        color: #1e3b5c;
-        cursor: pointer;
-        transition: all 0.15s;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .btn-primary {
-        background: #1e3b5c;
-        border-color: #1e3b5c;
-        color: white;
-        box-shadow: 0 4px 8px -4px rgba(26, 60, 110, 0.25);
-      }
-      .btn-primary:hover {
-        background: #143049;
-        border-color: #143049;
-      }
-      .btn-outline {
-        background: transparent;
-        border: 1px solid #b7ccdf;
-      }
-      .btn-outline:hover {
-        background: #eef4fa;
-      }
-      .btn-success {
-        background: #1f7840;
-        border-color: #1f7840;
-        color: white;
-      }
-      .btn-success:hover {
-        background: #155d32;
-      }
-      .btn-warning {
-        background: #b45f2b;
-        border-color: #b45f2b;
-        color: white;
-      }
-      .btn-warning:hover {
-        background: #964d22;
-      }
-      .row-modules {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 18px;
-        margin: 28px 0 32px;
-      }
-      .module-card {
-        background: #f9fcff;
-        border-radius: 20px;
-        padding: 18px 16px 16px;
-        border: 1px solid #dee9f2;
-        box-shadow: 0 4px 8px -6px rgba(0, 0, 0, 0.04);
-      }
-      .module-card h3 {
-        font-size: 16px;
-        font-weight: 600;
-        color: #163351;
-        border-bottom: 2px solid #d6e3f0;
-        padding-bottom: 10px;
-        margin-bottom: 14px;
-        display: flex;
-        justify-content: space-between;
-      }
-      .module-card textarea {
-        width: 100%;
-        border: 1px solid #d4e0ec;
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-size: 14px;
-        font-family: inherit;
-        background: white;
-        resize: vertical;
-        min-height: 110px;
-        line-height: 1.6;
-        transition: 0.1s;
-        color: #142b40;
-      }
-      .module-card textarea:focus {
-        border-color: #3b7a9e;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(48, 108, 158, 0.15);
-      }
-      .daily-section {
-        background: #f2f7fd;
-        border-radius: 24px;
-        padding: 22px 24px 18px;
-        margin: 30px 0 20px;
-        border: 1px solid #dae6f2;
-      }
-      .daily-section h2 {
-        font-size: 19px;
-        font-weight: 600;
-        color: #10324e;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .daily-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 16px 20px;
-      }
-      .daily-item {
-        display: flex;
+
+      .entry-card .e-header {
         flex-direction: column;
-        gap: 4px;
+        align-items: flex-start;
       }
-      .daily-item label {
-        font-size: 13px;
-        font-weight: 500;
-        color: #1e3f62;
-        letter-spacing: 0.2px;
-      }
-      .daily-item input,
-      .daily-item select {
-        padding: 10px 12px;
-        border-radius: 14px;
-        border: 1px solid #cbdbea;
-        background: white;
-        font-size: 14px;
-        width: 100%;
-        transition: 0.1s;
-        font-family: inherit;
-      }
-      .daily-item input:focus,
-      .daily-item select:focus {
-        border-color: #2b6c94;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(43, 108, 148, 0.12);
-      }
-      .output-area {
-        background: #f0f5fa;
-        border-radius: 20px;
-        padding: 20px 22px;
-        margin-top: 30px;
-        border: 1px solid #d6e2ef;
-        position: relative;
-      }
-      .output-area h3 {
-        font-size: 17px;
-        font-weight: 600;
-        color: #15344f;
-        margin-bottom: 12px;
-      }
-      .output-area pre {
-        background: #ffffff;
-        padding: 18px 20px;
-        border-radius: 16px;
-        border: 1px solid #d2dfee;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-family: "SF Mono", "Menlo", "Consolas", monospace;
-        font-size: 13.5px;
-        max-height: 380px;
-        overflow-y: auto;
-        line-height: 1.65;
-        color: #0d263b;
-      }
-      .action-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin: 18px 0 8px;
-      }
-      .badge {
-        background: #d7e5f5;
-        padding: 2px 12px;
-        border-radius: 40px;
-        font-size: 12px;
-        font-weight: 500;
-        color: #1d4466;
-      }
-      .footer-tip {
-        font-size: 13px;
-        color: #3f5f7c;
-        background: #e6eff8;
-        border-radius: 40px;
-        padding: 6px 18px;
-        display: inline-block;
-      }
-      @media (max-width: 680px) {
-        .container {
-          padding: 16px;
-        }
-        .row-modules {
-          grid-template-columns: 1fr;
-        }
-        .daily-grid {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-      @media print {
-        .btn,
-        .toolbar {
-          display: none;
-        }
-        .container {
-          box-shadow: none;
-        }
-      }
-      .hidden {
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container" id="app">
-      <div class="subhead">
-        <h1>📘 申论大作文 · 素材仓库</h1>
-        <span>📌 4大模块 + 每日输入 + 一键导出</span>
-      </div>
 
-      <!-- 工具栏 -->
+      .entry-card .e-meta {
+        margin-left: 0;
+      }
+    }
+
+    .highlight {
+      background: #f0f7ff;
+      border-left-color: #2f4b7a;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container" id="app">
+    <!-- 头部 -->
+    <div class="header">
+      <h1>📚 申论归纳积累 <small>按类别 · 要素维度</small></h1>
       <div class="toolbar">
-        <button class="btn btn-primary" id="exportAllBtn">📥 导出全部素材 (TXT)</button>
-        <button class="btn btn-success" id="exportDailyBtn">📋 导出今日记录</button>
-        <button class="btn btn-warning" id="clearDailyBtn">🗑️ 清空今日输入</button>
-        <button class="btn btn-outline" id="loadSampleBtn">📂 载入示例数据</button>
-        <span class="badge" style="margin-left: auto">自动保存至 localStorage</span>
+        <button class="btn" onclick="exportAllData()">📤 导出数据</button>
+        <button class="btn" onclick="importData()">📥 导入数据</button>
+        <button class="btn btn-primary" onclick="clearAllData()">🗑️ 清空全部</button>
+      </div>
+    </div>
+
+    <!-- 主标签 -->
+    <div class="tabs">
+      <button class="active" data-tab="tab-input">✏️ 录入</button>
+      <button data-tab="tab-summary">📊 汇总视图</button>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TAB 录入 -->
+    <!-- ========================================================= -->
+    <div class="tab-pane active" id="tab-input">
+      <!-- 类别切换 -->
+      <div class="category-bar" id="categoryBar">
+        <button class="cat-btn active" data-cat="政治">🏛️ 政治</button>
+        <button class="cat-btn" data-cat="经济">💹 经济</button>
+        <button class="cat-btn" data-cat="文化">📖 文化</button>
+        <button class="cat-btn" data-cat="社会">👥 社会</button>
+        <button class="cat-btn" data-cat="生态">🌿 生态</button>
       </div>
 
-      <!-- 4大模块卡片 -->
-      <div class="row-modules" id="moduleContainer">
-        <!-- 模块一 -->
-        <div class="module-card">
-          <h3>① 政策词 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">12-15个</span></h3>
-          <textarea id="module1" placeholder="高质量发展 | 新发展格局 | 中国式现代化 …"></textarea>
-        </div>
-        <!-- 模块二 -->
-        <div class="module-card">
-          <h3>② 经典案例 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">8-10个</span></h3>
-          <textarea id="module2" placeholder="乡村振兴：浙江千万工程（浙江/20年/美丽乡村）&#10;科技：华为芯片突破 …"></textarea>
-        </div>
-        <!-- 模块三 -->
-        <div class="module-card">
-          <h3>③ 数据/事实 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">5-6个</span></h3>
-          <textarea id="module3" placeholder="GDP 120万亿 | 脱贫近1亿人 | 研发投入2.5% …"></textarea>
-        </div>
-        <!-- 模块四 -->
-        <div class="module-card">
-          <h3>④ 金句/用典 <span style="font-weight: 400; font-size: 13px; color: #3f6b8f">6-8句</span></h3>
-          <textarea id="module4" placeholder="民为邦本本固邦宁（民生）&#10;治大国如烹小鲜（精细治理）"></textarea>
-        </div>
-      </div>
-
-      <!-- 每日积累输入 -->
-      <div class="daily-section">
-        <h2>📝 每日积累 · 输入区</h2>
-        <div class="daily-grid">
-          <div class="daily-item">
-            <label>📅 日期</label>
-            <input type="date" id="dailyDate" />
+      <!-- 录入表单 -->
+      <div class="form-section">
+        <h3>📝 新增条目 · <span id="currentCategoryLabel">政治</span></h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>要素类型 *</label>
+            <select id="entryType">
+              <option value="问题">问题/现状</option>
+              <option value="原因">原因</option>
+              <option value="做法">做法/对策</option>
+              <option value="影响">影响/意义</option>
+              <option value="金句">金句/规范词</option>
+              <option value="案例">案例</option>
+            </select>
           </div>
-          <div class="daily-item">
-            <label>📌 主题</label>
-            <input type="text" id="dailyTopic" placeholder="如：乡村振兴 / 科技创新" value="乡村振兴" />
+          <div class="form-group">
+            <label>标题/关键词 *</label>
+            <input type="text" id="entryTitle" placeholder="例：基层治理数字化水平不足" />
           </div>
-          <div class="daily-item">
-            <label>📖 核心观点</label>
-            <input type="text" id="dailyCore" placeholder="从文章提炼的核心观点" />
+          <div class="form-group full">
+            <label>具体内容 *</label>
+            <textarea id="entryContent" rows="3" placeholder="详细描述……"></textarea>
           </div>
-          <div class="daily-item">
-            <label>📎 案例关键词</label>
-            <input type="text" id="dailyCase" placeholder="谁 + 在哪 + 做了什么" />
+          <div class="form-group">
+            <label>来源/出处</label>
+            <input type="text" id="entrySource" placeholder="例：2024年政府工作报告" />
           </div>
-          <div class="daily-item">
-            <label>✨ 金句</label>
-            <input type="text" id="dailyQuote" placeholder="今日金句（含出处/适用话题）" />
-          </div>
-          <div class="daily-item">
-            <label>📊 数据（选填）</label>
-            <input type="text" id="dailyData" placeholder="如：森林覆盖率24%" />
+          <div class="form-group">
+            <label>适用话题 (标签，逗号分隔)</label>
+            <input type="text" id="entryTags" placeholder="例：数字政府, 老龄化" />
           </div>
         </div>
-        <div style="margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap">
-          <button class="btn btn-primary" id="addDailyBtn">➕ 记录今日积累</button>
-          <button class="btn btn-outline" id="resetDailyBtn">🔄 清空输入框</button>
-        </div>
-        <div
-          style="margin-top: 14px; background: #e3edf6; padding: 10px 16px; border-radius: 50px; font-size: 14px; color: #1f4465"
-          id="dailyFeedback"
-        >
-          ⏳ 今日尚未记录
+        <div class="form-actions">
+          <button class="btn btn-success" onclick="addEntry()">➕ 添加条目</button>
+          <button class="btn" onclick="clearForm()">清空表单</button>
+          <span style="margin-left:auto;font-size:13px;color:#4a5b79;" id="entryCount">当前类别: 0 条</span>
         </div>
       </div>
 
-      <!-- 输出/导出区 -->
-      <div class="output-area">
-        <h3>📤 导出预览 / 素材总览</h3>
-        <pre id="outputPreview">点击“导出全部素材”或“导出今日记录”查看内容。</pre>
-        <div class="action-group">
-          <button class="btn btn-primary" id="exportAllBtn2">📥 导出全部素材 (TXT)</button>
-          <button class="btn btn-success" id="exportDailyBtn2">📋 导出今日记录</button>
-          <button class="btn btn-outline" id="copyOutputBtn">📄 复制预览内容</button>
+      <!-- 条目列表 -->
+      <div style="margin-top:6px;">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <h3 style="color:#122a4a;">📋 条目列表 · <span id="listCategoryLabel">政治</span></h3>
+          <div style="display:flex;gap:6px;">
+            <button class="btn" onclick="filterType('all')" id="filterAll">全部</button>
+            <button class="btn" onclick="filterType('问题')">问题</button>
+            <button class="btn" onclick="filterType('做法')">做法</button>
+            <button class="btn" onclick="filterType('金句')">金句</button>
+          </div>
         </div>
-        <div style="margin-top: 10px">
-          <span class="footer-tip">💾 所有模块内容自动保存在浏览器中，刷新不丢失</span>
+        <div id="entryListContainer">
+          <div class="empty-tip">暂无条目，添加第一条吧</div>
         </div>
       </div>
     </div>
 
-    <script>
-      (function () {
-        // DOM 引用
-        const m1 = document.getElementById("module1");
-        const m2 = document.getElementById("module2");
-        const m3 = document.getElementById("module3");
-        const m4 = document.getElementById("module4");
-        const dailyDate = document.getElementById("dailyDate");
-        const dailyTopic = document.getElementById("dailyTopic");
-        const dailyCore = document.getElementById("dailyCore");
-        const dailyCase = document.getElementById("dailyCase");
-        const dailyQuote = document.getElementById("dailyQuote");
-        const dailyData = document.getElementById("dailyData");
-        const dailyFeedback = document.getElementById("dailyFeedback");
-        const outputPreview = document.getElementById("outputPreview");
+    <!-- ========================================================= -->
+    <!-- TAB 汇总视图 -->
+    <!-- ========================================================= -->
+    <div class="tab-pane" id="tab-summary">
+      <div class="summary-controls">
+        <span style="font-weight:600;color:#1f3b62;">汇总方式：</span>
+        <span class="pill active" data-summary="byCategory" onclick="switchSummaryView('byCategory')">按类别汇总</span>
+        <span class="pill" data-summary="byType" onclick="switchSummaryView('byType')">按要素类型汇总</span>
+        <span style="margin-left:auto;font-size:13px;color:#4a5b79;" id="summaryTotal">总计 0 条</span>
+      </div>
+      <div id="summaryContainer">
+        <div class="empty-tip">暂无数据，请先录入条目</div>
+      </div>
+    </div>
 
-        // 存储键
-        const STORAGE_KEY = "shenlun_material_v1";
-        const DAILY_KEY = "shenlun_daily_v1";
+    <!-- 隐藏的 file input -->
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleImport(event)" />
+  </div>
 
-        // 默认示例数据（符合文章中的4大模块）
-        const DEFAULT_MODULES = {
-          m1: "",
-          m2: "",
-          m3: "",
-          m4: "",
-        };
+  <script>
+    // ======================================================================
+    // 数据层
+    // ======================================================================
+    const STORAGE_KEY = 'shenlun_accumulate_v1';
 
-        // 加载存储数据
-        function loadFromStorage() {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-            try {
-              const data = JSON.parse(saved);
-              m1.value = data.m1 || "";
-              m2.value = data.m2 || "";
-              m3.value = data.m3 || "";
-              m4.value = data.m4 || "";
-            } catch (e) {
-              setDefaultModules();
-            }
-          } else {
-            setDefaultModules();
+    // 默认数据结构: { category: [ entries ] }
+    // 每个 entry: { id, type, title, content, source, tags, createdAt }
+
+    function getDefaultData() {
+      return {
+        '政治': [],
+        '经济': [],
+        '文化': [],
+        '社会': [],
+        '生态': []
+      };
+    }
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          // 确保所有类别存在
+          const defaults = getDefaultData();
+          for (let cat in defaults) {
+            if (!data[cat]) data[cat] = [];
           }
-
-          // 加载每日记录
-          const dailySaved = localStorage.getItem(DAILY_KEY);
-          if (dailySaved) {
-            try {
-              const d = JSON.parse(dailySaved);
-              if (d.date) dailyDate.value = d.date;
-              if (d.topic) dailyTopic.value = d.topic;
-              if (d.core) dailyCore.value = d.core;
-              if (d.case) dailyCase.value = d.case;
-              if (d.quote) dailyQuote.value = d.quote;
-              if (d.data) dailyData.value = d.data;
-              updateDailyFeedback(d);
-            } catch (e) {
-              /* ignore */
-            }
-          } else {
-            // 默认日期今日
-            const today = new Date().toISOString().split("T")[0];
-            dailyDate.value = today;
-          }
+          return data;
+        } catch (e) {
+          return getDefaultData();
         }
-
-        function setDefaultModules() {
-          m1.value = DEFAULT_MODULES.m1;
-          m2.value = DEFAULT_MODULES.m2;
-          m3.value = DEFAULT_MODULES.m3;
-          m4.value = DEFAULT_MODULES.m4;
-          saveModules();
-        }
-
-        function saveModules() {
-          const data = {
-            m1: m1.value,
-            m2: m2.value,
-            m3: m3.value,
-            m4: m4.value,
-          };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        }
-
-        function saveDaily(dailyObj) {
-          localStorage.setItem(DAILY_KEY, JSON.stringify(dailyObj));
-          updateDailyFeedback(dailyObj);
-        }
-
-        function updateDailyFeedback(d) {
-          if (d && d.date) {
-            const parts = [];
-            if (d.topic) parts.push("主题:" + d.topic);
-            if (d.core) parts.push("观点:" + d.core.substring(0, 12) + "…");
-            if (d.case) parts.push("案例:" + d.case.substring(0, 10) + "…");
-            if (d.quote) parts.push("金句:" + d.quote.substring(0, 10) + "…");
-            dailyFeedback.innerHTML = "✅ 今日已记录 · " + (parts.join(" ") || " 内容完整");
-          } else {
-            dailyFeedback.innerHTML = "⏳ 今日尚未记录，填写后点击“记录今日积累”";
-          }
-        }
-
-        // 获取当前每日对象
-        function getDailyObject() {
-          return {
-            date: dailyDate.value,
-            topic: dailyTopic.value.trim(),
-            core: dailyCore.value.trim(),
-            case: dailyCase.value.trim(),
-            quote: dailyQuote.value.trim(),
-            data: dailyData.value.trim(),
-          };
-        }
-
-        // 记录今日积累
-        function recordDaily() {
-          const d = getDailyObject();
-          if (!d.date) {
-            alert("请选择日期");
-            return;
-          }
-          if (!d.topic && !d.core && !d.case && !d.quote && !d.data) {
-            alert("请至少填写一项内容");
-            return;
-          }
-          saveDaily(d);
-          // 同时追加到对应模块（根据主题智能推荐，但这里只做记录）
-          // 把今日案例追加到模块二？ 保留用户自主权，不自动追加，避免覆盖。
-          // 但给用户提示
-          dailyFeedback.innerHTML = "✅ 已保存！ 记得手动将素材整理到上方4大模块中。";
-          // 同时将输入内容显示在输出预览
-          const dailyText = buildDailyText(d);
-          outputPreview.textContent = "📌 今日积累已保存：\n" + dailyText;
-        }
-
-        function buildDailyText(d) {
-          let lines = [];
-          lines.push("📅 " + (d.date || "未填"));
-          if (d.topic) lines.push("▪ 主题：" + d.topic);
-          if (d.core) lines.push("▪ 核心观点：" + d.core);
-          if (d.case) lines.push("▪ 案例关键词：" + d.case);
-          if (d.quote) lines.push("▪ 金句：" + d.quote);
-          if (d.data) lines.push("▪ 数据：" + d.data);
-          return lines.join("\n");
-        }
-
-        // 构建全部素材导出文本
-        function buildFullExport() {
-          let result = "📘 申论大作文 · 素材仓库（4大模块）\n";
-          result += "━".repeat(48) + "\n\n";
-          result += "【模块一 · 政策词】\n" + (m1.value || "（未填写）") + "\n\n";
-          result += "【模块二 · 经典案例】\n" + (m2.value || "（未填写）") + "\n\n";
-          result += "【模块三 · 数据/事实】\n" + (m3.value || "（未填写）") + "\n\n";
-          result += "【模块四 · 金句/用典】\n" + (m4.value || "（未填写）") + "\n\n";
-          result += "━".repeat(48) + "\n";
-          result += "📌 导出时间：" + new Date().toLocaleString() + "\n";
-          result += "💾 素材持续更新，坚持积累。";
-          return result;
-        }
-
-        // 导出全部素材
-        function exportAll() {
-          const content = buildFullExport();
-          outputPreview.textContent = content;
-          downloadTxt(content, "申论素材_全部模块.txt");
-        }
-
-        // 导出今日记录
-        function exportDaily() {
-          const d = getDailyObject();
-          if (!d.date && !d.topic && !d.core && !d.case && !d.quote && !d.data) {
-            alert("今日尚无积累记录，请先填写内容。");
-            return;
-          }
-          const text = "📋 每日积累记录\n" + buildDailyText(d);
-          outputPreview.textContent = text;
-          downloadTxt(text, "申论每日积累_" + (d.date || "今日") + ".txt");
-        }
-
-        function downloadTxt(content, filename) {
-          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-        }
-
-        // 清空今日输入
-        function clearDaily() {
-          dailyTopic.value = "";
-          dailyCore.value = "";
-          dailyCase.value = "";
-          dailyQuote.value = "";
-          dailyData.value = "";
-          // 但保留日期
-          const today = new Date().toISOString().split("T")[0];
-          dailyDate.value = today;
-          localStorage.removeItem(DAILY_KEY);
-          dailyFeedback.innerHTML = "🗑️ 已清空今日记录，可重新输入。";
-          outputPreview.textContent = "已清空今日输入。";
-        }
-
-        // 加载示例数据（覆盖模块）
-        function loadSample() {
-          if (confirm("将覆盖当前4大模块内容，确定吗？")) {
-            m1.value = DEFAULT_MODULES.m1;
-            m2.value = DEFAULT_MODULES.m2;
-            m3.value = DEFAULT_MODULES.m3;
-            m4.value = DEFAULT_MODULES.m4;
-            saveModules();
-            outputPreview.textContent = "✅ 已加载示例素材（4大模块）。可继续编辑或导出。";
-            alert("示例数据已加载！");
-          }
-        }
-
-        // 复制预览内容
-        function copyOutput() {
-          const text = outputPreview.textContent;
-          if (!text || text === "点击“导出全部素材”或“导出今日记录”查看内容。") {
-            alert("暂无内容可复制，请先导出。");
-            return;
-          }
-          navigator.clipboard
-            .writeText(text)
-            .then(() => {
-              alert("✅ 已复制到剪贴板");
-            })
-            .catch(() => {
-              // fallback
-              const area = document.createElement("textarea");
-              area.value = text;
-              document.body.appendChild(area);
-              area.select();
-              document.execCommand("copy");
-              document.body.removeChild(area);
-              alert("✅ 已复制");
-            });
-        }
-
-        // 重置每日输入框（不清除存储）
-        function resetDailyInputs() {
-          dailyTopic.value = "";
-          dailyCore.value = "";
-          dailyCase.value = "";
-          dailyQuote.value = "";
-          dailyData.value = "";
-          // 保留日期
-        }
-
-        // 事件绑定
-        document.getElementById("addDailyBtn").addEventListener("click", recordDaily);
-        document.getElementById("resetDailyBtn").addEventListener("click", resetDailyInputs);
-        document.getElementById("exportAllBtn").addEventListener("click", exportAll);
-        document.getElementById("exportAllBtn2").addEventListener("click", exportAll);
-        document.getElementById("exportDailyBtn").addEventListener("click", exportDaily);
-        document.getElementById("exportDailyBtn2").addEventListener("click", exportDaily);
-        document.getElementById("clearDailyBtn").addEventListener("click", clearDaily);
-        document.getElementById("loadSampleBtn").addEventListener("click", loadSample);
-        document.getElementById("copyOutputBtn").addEventListener("click", copyOutput);
-
-        // 模块内容自动保存
-        [m1, m2, m3, m4].forEach((t) => {
-          t.addEventListener("input", saveModules);
-        });
-
-        // 初始化
-        loadFromStorage();
-
-        // 自动预览：点击导出全部时展示
-        window.exportAllPreview = function () {
-          outputPreview.textContent = buildFullExport();
-        };
-
-        // 额外：点击输出区的导出全部按钮预览
-        document.querySelector("#exportAllBtn2")?.addEventListener("click", function () {
-          // 但已经在exportAll里做了
-        });
-
-        // 显示初始提示
-        if (outputPreview.textContent.trim() === "点击“导出全部素材”或“导出今日记录”查看内容。") {
-          // 保留
-        }
-
-        // 按日期加载每日记录时自动填充反馈
-        const savedDaily = localStorage.getItem(DAILY_KEY);
-        if (savedDaily) {
-          try {
-            const d = JSON.parse(savedDaily);
-            updateDailyFeedback(d);
-          } catch (e) {}
-        }
-      })();
-      // 注册Service Worker
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then(function (registration) {
-            console.log("Service Worker 注册成功！");
-          })
-          .catch(function (error) {
-            console.log("Service Worker 注册失败:", error);
-          });
       }
-    </script>
-  </body>
+      return getDefaultData();
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // 生成短id
+    function genId() {
+      return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+    }
+
+    // ======================================================================
+    // 状态
+    // ======================================================================
+    let currentCategory = '政治';
+    let currentFilter = 'all';
+    let summaryView = 'byCategory'; // 'byCategory' | 'byType'
+
+    // ======================================================================
+    // DOM 引用
+    // ======================================================================
+    const categoryBar = document.getElementById('categoryBar');
+    const currentCategoryLabel = document.getElementById('currentCategoryLabel');
+    const listCategoryLabel = document.getElementById('listCategoryLabel');
+    const entryListContainer = document.getElementById('entryListContainer');
+    const entryCount = document.getElementById('entryCount');
+
+    // 表单
+    const entryType = document.getElementById('entryType');
+    const entryTitle = document.getElementById('entryTitle');
+    const entryContent = document.getElementById('entryContent');
+    const entrySource = document.getElementById('entrySource');
+    const entryTags = document.getElementById('entryTags');
+
+    // 汇总
+    const summaryContainer = document.getElementById('summaryContainer');
+    const summaryTotal = document.getElementById('summaryTotal');
+
+    // ======================================================================
+    // 渲染：条目列表
+    // ======================================================================
+    function renderEntries() {
+      const data = loadData();
+      const entries = data[currentCategory] || [];
+      const filtered = currentFilter === 'all' ? entries : entries.filter(e => e.type === currentFilter);
+
+      if (filtered.length === 0) {
+        entryListContainer.innerHTML = `<div class="empty-tip">暂无${currentFilter === 'all' ? '' : '“' + currentFilter + '”类'}条目</div>`;
+      } else {
+        let html = '<div class="entry-list">';
+        filtered.forEach(function (entry) {
+          const tags = entry.tags ? entry.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+          html += `
+          <div class="entry-card">
+            <div class="e-header">
+              <span class="e-type">${entry.type}</span>
+              <span class="e-title">${escapeHtml(entry.title)}</span>
+              <span class="e-meta">
+                <span>${entry.source ? '📎 ' + escapeHtml(entry.source) : ''}</span>
+                <span>🕐 ${formatDate(entry.createdAt)}</span>
+              </span>
+            </div>
+            <div class="e-content">${escapeHtml(entry.content)}</div>
+            ${tags.length ? '<div class="e-tags">' + tags.map(t => '<span class="tag">#' + escapeHtml(t) + '</span>').join('') + '</div>' : ''}
+            <div class="e-actions">
+              <button onclick="deleteEntry('${entry.id}')">🗑️ 删除</button>
+            </div>
+          </div>
+        `;
+        });
+        html += '</div>';
+        entryListContainer.innerHTML = html;
+      }
+      entryCount.textContent = `当前类别: ${entries.length} 条`;
+      listCategoryLabel.textContent = currentCategory;
+      currentCategoryLabel.textContent = currentCategory;
+    }
+
+    // ======================================================================
+    // 添加 / 删除 条目
+    // ======================================================================
+    function addEntry() {
+      const type = entryType.value;
+      const title = entryTitle.value.trim();
+      const content = entryContent.value.trim();
+      const source = entrySource.value.trim();
+      const tags = entryTags.value.trim();
+
+      if (!title || !content) {
+        alert('请填写标题和具体内容');
+        return;
+      }
+
+      const data = loadData();
+      const newEntry = {
+        id: genId(),
+        type: type,
+        title: title,
+        content: content,
+        source: source,
+        tags: tags,
+        createdAt: new Date().toISOString()
+      };
+      data[currentCategory].push(newEntry);
+      saveData(data);
+      renderEntries();
+      clearForm();
+      updateSummaryTotal();
+      // 如果汇总视图可见，刷新
+      if (document.getElementById('tab-summary').classList.contains('active')) {
+        renderSummary();
+      }
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('确定删除该条目吗？')) return;
+      const data = loadData();
+      data[currentCategory] = data[currentCategory].filter(e => e.id !== id);
+      saveData(data);
+      renderEntries();
+      updateSummaryTotal();
+      if (document.getElementById('tab-summary').classList.contains('active')) {
+        renderSummary();
+      }
+    }
+
+    function clearForm() {
+      entryTitle.value = '';
+      entryContent.value = '';
+      entrySource.value = '';
+      entryTags.value = '';
+      entryType.value = '问题';
+    }
+
+    // ======================================================================
+    // 筛选
+    // ======================================================================
+    function filterType(type) {
+      currentFilter = type;
+      document.querySelectorAll('#filterAll, .btn').forEach(function (btn) {
+        if (btn.textContent === '全部' && type === 'all') btn.style.background = '#dce3ef';
+        else if (btn.textContent === type) btn.style.background = '#dce3ef';
+        else btn.style.background = 'transparent';
+      });
+      renderEntries();
+    }
+
+    // ======================================================================
+    // 类别切换
+    // ======================================================================
+    function switchCategory(category) {
+      currentCategory = category;
+      document.querySelectorAll('.cat-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.cat === category);
+      });
+      currentFilter = 'all';
+      document.querySelectorAll('#filterAll, .btn').forEach(function (btn) {
+        if (btn.textContent === '全部') btn.style.background = '#dce3ef';
+        else btn.style.background = 'transparent';
+      });
+      renderEntries();
+    }
+
+    // ======================================================================
+    // 汇总视图
+    // ======================================================================
+    function renderSummary() {
+      const data = loadData();
+      const allEntries = [];
+      for (let cat in data) {
+        data[cat].forEach(function (entry) {
+          allEntries.push({ ...entry, category: cat });
+        });
+      }
+
+      if (allEntries.length === 0) {
+        summaryContainer.innerHTML = '<div class="empty-tip">暂无数据，请先录入条目</div>';
+        summaryTotal.textContent = '总计 0 条';
+        return;
+      }
+
+      summaryTotal.textContent = '总计 ' + allEntries.length + ' 条';
+
+      let html = '';
+
+      if (summaryView === 'byCategory') {
+        // 按类别汇总
+        const categories = ['政治', '经济', '文化', '社会', '生态'];
+        html = '<div class="summary-grid">';
+        categories.forEach(function (cat) {
+          const items = data[cat] || [];
+          if (items.length === 0) {
+            html += `<div class="summary-card"><h4>${cat}</h4><div style="color:#7a8aa8;font-size:13px;">暂无条目</div></div>`;
+            return;
+          }
+          // 按类型分组
+          const groups = {};
+          items.forEach(function (item) {
+            if (!groups[item.type]) groups[item.type] = [];
+            groups[item.type].push(item);
+          });
+          let cardHtml = `<div class="summary-card"><h4>${cat} (${items.length})</h4>`;
+          const typeOrder = ['问题', '原因', '做法', '影响', '金句', '案例'];
+          typeOrder.forEach(function (t) {
+            if (groups[t] && groups[t].length) {
+              cardHtml += `<div style="font-weight:600;font-size:13px;color:#2f4b7a;margin:6px 0 2px;">${t}</div>`;
+              groups[t].forEach(function (item) {
+                cardHtml +=
+                  `<div class="s-item"><span class="scontent">• ${escapeHtml(item.title)}</span></div>`;
+              });
+            }
+          });
+          cardHtml += '</div>';
+          html += cardHtml;
+        });
+        html += '</div>';
+      } else {
+        // 按要素类型汇总
+        const typeOrder = ['问题', '原因', '做法', '影响', '金句', '案例'];
+        html = '<div class="summary-grid">';
+        typeOrder.forEach(function (type) {
+          const items = allEntries.filter(e => e.type === type);
+          if (items.length === 0) {
+            html += `<div class="summary-card"><h4>${type}</h4><div style="color:#7a8aa8;font-size:13px;">暂无条目</div></div>`;
+            return;
+          }
+          let cardHtml = `<div class="summary-card"><h4>${type} (${items.length})</h4>`;
+          items.forEach(function (item) {
+            cardHtml +=
+              `<div class="s-item"><span class="scat">[${item.category}]</span><span class="scontent">${escapeHtml(item.title)}</span></div>`;
+          });
+          cardHtml += '</div>';
+          html += cardHtml;
+        });
+        html += '</div>';
+      }
+
+      summaryContainer.innerHTML = html;
+    }
+
+    function switchSummaryView(view) {
+      summaryView = view;
+      document.querySelectorAll('.summary-controls .pill').forEach(function (p) {
+        p.classList.toggle('active', p.dataset.summary === view);
+      });
+      renderSummary();
+    }
+
+    function updateSummaryTotal() {
+      const data = loadData();
+      let total = 0;
+      for (let cat in data) total += data[cat].length;
+      summaryTotal.textContent = '总计 ' + total + ' 条';
+    }
+
+    // ======================================================================
+    // 导出 / 导入
+    // ======================================================================
+    function exportAllData() {
+      const data = loadData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '申论积累_' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importData() {
+      document.getElementById('fileInput').click();
+    }
+
+    function handleImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          // 验证结构
+          const keys = ['政治', '经济', '文化', '社会', '生态'];
+          let valid = true;
+          keys.forEach(function (k) {
+            if (!Array.isArray(imported[k])) valid = false;
+          });
+          if (!valid) {
+            alert('数据格式错误，请确保包含五大类别');
+            return;
+          }
+          if (!confirm('将覆盖当前所有数据，确定吗？')) return;
+          saveData(imported);
+          renderEntries();
+          renderSummary();
+          updateSummaryTotal();
+          alert('✅ 导入成功！');
+        } catch (err) {
+          alert('导入失败: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function clearAllData() {
+      if (!confirm('确定清空所有数据吗？此操作不可撤销！')) return;
+      saveData(getDefaultData());
+      renderEntries();
+      renderSummary();
+      updateSummaryTotal();
+    }
+
+    // ======================================================================
+    // 工具函数
+    // ======================================================================
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // ======================================================================
+    // Tab 切换
+    // ======================================================================
+    document.querySelectorAll('.tabs button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        const target = this.dataset.tab;
+        document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.remove('active'); });
+        document.getElementById(target).classList.add('active');
+        if (target === 'tab-summary') renderSummary();
+        if (target === 'tab-input') renderEntries();
+      });
+    });
+
+    // ======================================================================
+    // 类别切换事件
+    // ======================================================================
+    categoryBar.addEventListener('click', function (e) {
+      const btn = e.target.closest('.cat-btn');
+      if (!btn) return;
+      switchCategory(btn.dataset.cat);
+    });
+
+    // ======================================================================
+    // 初始化
+    // ======================================================================
+    function init() {
+      // 设置默认筛选高亮
+      document.querySelector('#filterAll').style.background = '#dce3ef';
+      renderEntries();
+      updateSummaryTotal();
+      // 如果汇总tab默认不可见，先不渲染
+    }
+
+    init();
+
+    // 暴露全局函数给 onclick
+    window.addEntry = addEntry;
+    window.deleteEntry = deleteEntry;
+    window.clearForm = clearForm;
+    window.filterType = filterType;
+    window.switchCategory = switchCategory;
+    window.exportAllData = exportAllData;
+    window.importData = importData;
+    window.handleImport = handleImport;
+    window.clearAllData = clearAllData;
+    window.renderSummary = renderSummary;
+    window.switchSummaryView = switchSummaryView;
+    window.renderEntries = renderEntries;
+    window.updateSummaryTotal = updateSummaryTotal;
+  </script>
+
+</body>
+
 </html>

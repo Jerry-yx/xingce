@@ -1,48 +1,22 @@
-// 最简单的sw.js，只为了触发安装提示，不做复杂缓存
-self.addEventListener("install", function (e) {
-  e.waitUntil(
-    caches.open("my-cache").then(function (cache) {
-      return cache.addAll([
-        "/",
-        "/xing.html",
-        "/shen.html",
-        "/manifest.json", // 改成你实际的js文件名
-      ]);
-    }),
-  );
-});
-// 安装Service Worker时预缓存文件
-self.addEventListener("install", function (event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function (cache) {
-      console.log("缓存已打开，开始预缓存文件");
-      return cache.addAll(urlsToCache);
-    }),
-  );
+// 极简 sw.js，不缓存任何内容，只为了让浏览器“忘记”旧的缓存逻辑
+const CACHE_NAME = 'my-pwa-v2'; // 版本号改成和之前不同的新值
+
+// 安装时什么都不存
+self.addEventListener('install', event => {
+  self.skipWaiting(); // 立即激活
 });
 
-// 拦截网络请求，优先从缓存中读取
-self.addEventListener("fetch", function (event) {
-  event.respondWith(
-    caches.match(event.request).then(function (response) {
-      // 如果缓存中有，直接返回缓存；否则去网络上请求
-      return response || fetch(event.request);
-    }),
-  );
+// 所有请求都直接走网络，不查缓存
+self.addEventListener('fetch', event => {
+  event.respondWith(fetch(event.request));
 });
 
-// 激活时清理旧版本缓存（避免用户手机存了旧文件）
-self.addEventListener("activate", function (event) {
+// 激活时删除所有旧缓存
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(function (cacheNames) {
-      return Promise.all(
-        cacheNames.map(function (cacheName) {
-          if (cacheName !== CACHE_NAME) {
-            console.log("删除旧缓存:", cacheName);
-            return caches.delete(cacheName);
-          }
-        }),
-      );
-    }),
+    caches.keys().then(keyList => {
+      return Promise.all(keyList.map(key => caches.delete(key)));
+    })
   );
+  self.clients.claim(); // 立即控制所有页面
 });
