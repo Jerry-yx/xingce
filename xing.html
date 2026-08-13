@@ -452,12 +452,15 @@
             <input type="text" placeholder="min" class="small" id="言_计时1" /> /
             <input type="text" placeholder="min" class="small" id="言_计时2" />
           </div>
-          <div class="label" style="margin-top: 10px">⭕ 画圈题号 (犹豫/纠结)</div>
+          <div class="label" style="margin-top: 10px">⭕ 填词画圈题号 (犹豫/纠结)</div>
           <div class="field"><input type="text" placeholder="例: 12,34,56" class="medium" id="言_画圈" /></div>
+          <div class="label" style="margin-top: 10px">⭕ 言语画圈题号 (犹豫/纠结)</div>
+          <div class="field"><input type="text" placeholder="例: 12,34,56" class="medium" id="言_画圈2" /></div>
         </div>
         <div class="sub-item">
           <div class="label">❌ 错题题号</div>
-          <div class="field"><input type="text" placeholder="错题号" class="medium" id="言_错题" /></div>
+          <div class="field"><input type="text" placeholder="填词错题号" class="medium" id="言_错题" /></div>
+          <div class="field"><input type="text" placeholder="言语错题号" class="medium" id="言_错题2" /></div>
           <div class="label" style="margin-top: 10px">📊 中心错因统计</div>
           <div class="error-stat">
             <span class="pill">文章类型 1
@@ -694,7 +697,7 @@
         ids.push("词对_" + i + "_1", "词对_" + i + "_2", "词对_" + i + "_3");
       }
       // 言语理解
-      ids.push("言_计时1", "言_计时2", "言_画圈", "言_错题");
+      ids.push("言_计时1", "言_计时2", "言_画圈", "言_画圈2", "言_错题", "言_错题2");
       for (let i = 1; i <= 4; i++) {
         ids.push("言_文章类型" + i, "错误个数" + i);
       }
@@ -839,8 +842,10 @@
           var s = r["言语理解"];
           var parts = [];
           if (s["言_计时1"] || s["言_计时2"]) parts.push("计时：第1套" + (s["言_计时1"] || "-") + "min，第2套" + (s["言_计时2"] || "-") + "min");
-          if (s["言_画圈"]) parts.push("画圈题号：" + s["言_画圈"]);
-          if (s["言_错题"]) parts.push("错题题号：" + s["言_错题"]);
+          if (s["言_画圈"]) parts.push("填词画圈题号：" + s["言_画圈"]);
+          if (s["言_画圈2"]) parts.push("言语画圈题号：" + s["言_画圈2"]);
+          if (s["言_错题"]) parts.push("填词错题号：" + s["言_错题"]);
+          if (s["言_错题2"]) parts.push("言语错题号：" + s["言_错题2"]);
           var errParts = [];
           for (var i = 1; i <= 4; i++) {
             var typeVal = s["言_文章类型" + i];
