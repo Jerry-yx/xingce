@@ -2,8 +2,8 @@ import React from "react";
 import { InputNumber, Select, Input } from "antd";
 import { DynamicList } from "../common/DynamicList";
 import { ModuleCard, AccuracyBadge } from "../common/ModuleCard";
-import type { SpeechModule, Paper, ArticleTypeError } from "../../types";
-import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS } from "../../utils/constants";
+import type { SpeechModule, Paper, ArticleTypeError, QuestionTypeSkill } from "../../types";
+import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS, QUESTION_TYPE_MAP } from "../../utils/constants";
 
 interface SpeechSectionProps {
   data: SpeechModule;
@@ -14,6 +14,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
   const updatePapers = (papers: Paper[]) => onChange({ ...data, papers });
   const updateArticleTypes = (articleTypes: ArticleTypeError[]) => onChange({ ...data, articleTypes });
   const updateErrorTypes = (errorTypes: Record<string, number>) => onChange({ ...data, errorTypes });
+  const updateQuestionTypeSkills = (questionTypeSkills: QuestionTypeSkill[]) => onChange({ ...data, questionTypeSkills });
 
   const renderArticleType = (item: ArticleTypeError, _i: number, onUpdate: (item: ArticleTypeError) => void) => (
     <div className="field-cell">
@@ -26,6 +27,27 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
         options={Object.entries(ARTICLE_TYPE_MAP).map(([k, v]) => ({ value: Number(k), label: v }))}
       />
       <InputNumber value={item.errorCount} onChange={(v) => onUpdate({ ...item, errorCount: v || 0 })} min={0} size="small" style={{ width: 60 }} />
+    </div>
+  );
+
+  const renderQuestionTypeSkill = (item: QuestionTypeSkill, _i: number, onUpdate: (item: QuestionTypeSkill) => void) => (
+    <div className="field-cell">
+      <label className="field-label">题目类型</label>
+      <Select
+        value={item.questionType}
+        onChange={(v) => onUpdate({ ...item, questionType: v })}
+        size="small"
+        className="field-input"
+        options={Object.entries(QUESTION_TYPE_MAP).map(([k, v]) => ({ value: Number(k), label: v }))}
+      />
+      <Input
+        value={item.skill}
+        onChange={(e) => onUpdate({ ...item, skill: e.target.value })}
+        placeholder="技巧"
+        size="small"
+        className="field-input"
+        style={{ width: 120 }}
+      />
     </div>
   );
 
@@ -182,6 +204,38 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                 </div>
               ))}
             </div>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: "#4a5b79" }}>题目类型与技巧</div>
+            {(() => {
+              const items = data.questionTypeSkills || [];
+              const agg: Record<number, number> = {};
+              items.forEach((qt) => {
+                agg[qt.questionType] = (agg[qt.questionType] || 0) + 1;
+              });
+              const total = items.length;
+              if (total === 0) return null;
+              return (
+                <div style={{ background: "#f0f5ff", borderRadius: 6, padding: "4px 10px", marginBottom: 8, fontSize: 12, color: "#4a5b79", display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <span style={{ fontWeight: 600 }}>合计 {total} 项</span>
+                  {Object.entries(agg)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => (
+                      <span key={k}>
+                        {QUESTION_TYPE_MAP[Number(k)] || "未知"}：{v}
+                      </span>
+                    ))}
+                </div>
+              );
+            })()}
+            <DynamicList
+              items={data.questionTypeSkills || []}
+              onChange={updateQuestionTypeSkills}
+              createItem={() => ({ id: String(Date.now()), questionType: 1, skill: '' })}
+              renderItem={renderQuestionTypeSkill}
+              addLabel="添加题目类型"
+              minItems={0}
+            />
           </div>
         </div>
       </div>

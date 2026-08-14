@@ -10,7 +10,7 @@ import { NumberSection } from "./components/modules/NumberSection";
 import { EssaySection } from "./components/modules/EssaySection";
 import { WordPairSection } from "./components/modules/WordPairSection";
 import { getAllDayData, loadDayData, formatDate } from "./utils/storage";
-import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS, LOGIC_ERROR_KEYS } from "./utils/constants";
+import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS, LOGIC_ERROR_KEYS, QUESTION_TYPE_MAP } from "./utils/constants";
 import type { DayData, Paper, WordPair } from "./types";
 import "./styles/app.css";
 
@@ -109,6 +109,14 @@ const App: React.FC = () => {
               if (parts.length) text += `    ${parts.join(" / ")}\n`;
             });
           }
+          if (d.speech.questionTypeSkills?.length) {
+            text += "  题目类型与技巧：\n";
+            d.speech.questionTypeSkills.forEach((qt) => {
+              if (qt.skill?.trim()) {
+                text += `    ${QUESTION_TYPE_MAP[qt.questionType] || "未知"}：${qt.skill}\n`;
+              }
+            });
+          }
         }
         if (key === "essay" && d.essay?.papers) {
           d.essay.papers.forEach((p: Paper) => {
@@ -162,7 +170,7 @@ const App: React.FC = () => {
         {moduleConfigs.map(({ key, title }) => {
           const mod = d[key] as unknown as Record<string, unknown>;
           const papers = (mod?.papers as Paper[]) || [];
-          const hasData = papers.length > 0 || (key === "speech" && (d.speech.articleTypes?.length || d.speech.wordPairs?.length));
+          const hasData = papers.length > 0 || (key === "speech" && (d.speech.articleTypes?.length || d.speech.wordPairs?.length || d.speech.questionTypeSkills?.length));
           return (
             <Card key={key} title={title} style={{ marginBottom: 12, borderRadius: 12 }} size="small">
               {!hasData ? (
@@ -280,6 +288,18 @@ const App: React.FC = () => {
                             .map((wp, idx) => (
                               <div key={idx} style={{ marginLeft: 12 }}>
                                 {[wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].filter(Boolean).join(" / ")}
+                              </div>
+                            ))}
+                        </div>
+                      ) : null}
+                      {d.speech.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
+                        <div className="hist-line">
+                          <span style={{ color: HL.key }}>题目类型与技巧：</span>
+                          {d.speech.questionTypeSkills
+                            .filter((qt) => qt.skill?.trim())
+                            .map((qt, idx) => (
+                              <div key={idx} style={{ marginLeft: 12 }}>
+                                {QUESTION_TYPE_MAP[qt.questionType] || "未知"}：{qt.skill}
                               </div>
                             ))}
                         </div>
@@ -455,6 +475,41 @@ const App: React.FC = () => {
       pairList.sort((a, b) => b.dates[0]?.localeCompare(a.dates[0] || "") || 0);
     }
 
+    // 题目类型与技巧汇总
+    const qtSkillMap: Record<string, { questionType: number; skills: string[]; dates: string[] }> = {};
+    allData.forEach((d) => {
+      d.speech?.questionTypeSkills?.forEach((qt) => {
+        if (!qt.skill?.trim()) return;
+        const key = `${qt.questionType}_${qt.skill.trim()}`;
+        if (!qtSkillMap[key]) {
+          qtSkillMap[key] = { questionType: qt.questionType, skills: [], dates: [] };
+        }
+        qtSkillMap[key].skills.push(qt.skill.trim());
+        qtSkillMap[key].dates.push(d.date);
+      });
+    });
+    const qtSkillList = Object.values(qtSkillMap).sort((a, b) => b.dates.length - a.dates.length);
+
+    // 题目类型聚合：按类型分组，收集所有技巧
+    const qtGrouped: Record<number, { skills: Set<string>; dates: Set<string> }> = {};
+    allData.forEach((d) => {
+      d.speech?.questionTypeSkills?.forEach((qt) => {
+        if (!qt.skill?.trim()) return;
+        if (!qtGrouped[qt.questionType]) {
+          qtGrouped[qt.questionType] = { skills: new Set(), dates: new Set() };
+        }
+        qtGrouped[qt.questionType].skills.add(qt.skill.trim());
+        qtGrouped[qt.questionType].dates.add(d.date);
+      });
+    });
+    const qtGroupedList = Object.entries(qtGrouped)
+      .map(([type, v]) => ({
+        questionType: Number(type),
+        skills: Array.from(v.skills),
+        dayCount: v.dates.size,
+      }))
+      .sort((a, b) => b.dayCount - a.dayCount);
+
     // const totalReg = pairList.reduce((s, p) => s + p.dates.length, 0);
     // const totalErr = pairList.reduce((s, p) => s + p.errorCount, 0);
 
@@ -508,6 +563,27 @@ const App: React.FC = () => {
             );
           })}
           {!pairList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
+        </Card>
+        <Card title="📋 言语技巧" className="summary-card" size="small">
+          {qtGroupedList.map((g, i) => (
+            <div className="summary-row" key={i} style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 600, color: "#1a2b4c" }}>
+                  {QUESTION_TYPE_MAP[g.questionType] || "未知"}
+                </span>
+                <Tag color="blue">{g.dayCount}天</Tag>
+                <Tag color="green">{g.skills.length}条技巧</Tag>
+              </div>
+              <div style={{ fontSize: 12, color: "#4a5b79", paddingLeft: 4 }}>
+                {g.skills.map((s, i) => (
+                  <Tag key={i} style={{ margin: "0 4px 4px 0" }}>
+                    {s}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+          ))}
+          {!qtGroupedList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
         </Card>
         <Card title="📌 申论漏抄词" className="summary-card" size="small">
           {missWordList.length > 0 ? (
@@ -569,7 +645,7 @@ const App: React.FC = () => {
     const renderDayDetail = (d: DayData, moduleKey: string): React.ReactNode => {
       if (moduleKey === "speech") {
         const papers = d.speech?.papers || [];
-        if (!papers.length && !d.speech?.articleTypes?.length && !d.speech?.wordPairs?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length && !d.speech?.articleTypes?.length && !d.speech?.wordPairs?.length && !d.speech?.questionTypeSkills?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
@@ -625,6 +701,18 @@ const App: React.FC = () => {
                     <Err n={d.speech?.errorTypes?.[k.key] || 0} />
                   </span>
                 ))}
+              </div>
+            ) : null}
+            {d.speech?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
+              <div className="hist-line">
+                <span style={{ color: HL.key }}>题目类型与技巧：</span>
+                {d.speech.questionTypeSkills
+                  .filter((qt) => qt.skill?.trim())
+                  .map((qt, idx) => (
+                    <div key={idx} style={{ marginLeft: 12 }}>
+                      {QUESTION_TYPE_MAP[qt.questionType] || "未知"}：{qt.skill}
+                    </div>
+                  ))}
               </div>
             ) : null}
           </>
@@ -926,6 +1014,23 @@ const App: React.FC = () => {
                   .sort((a, b) => b[1] - a[1])
                   .map(([k, v]) => `${k}:${v}次`)
                   .join(" · ") || "无"}
+              </div>
+              <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
+                <strong>题目类型：</strong>
+                {(() => {
+                  const qtAgg: Record<string, number> = {};
+                  allData.forEach((d) => {
+                    d.speech?.questionTypeSkills?.forEach((qt) => {
+                      if (!qt.skill?.trim()) return;
+                      const name = QUESTION_TYPE_MAP[qt.questionType] || "未知";
+                      qtAgg[name] = (qtAgg[name] || 0) + 1;
+                    });
+                  });
+                  return Object.entries(qtAgg)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => `${k}:${v}个`)
+                    .join(" · ") || "无";
+                })()}
               </div>
             </>
           );

@@ -83,11 +83,18 @@ export interface Skill {
   description: string;
 }
 
+export interface QuestionTypeSkill {
+  id: string;
+  questionType: number;
+  skill: string;
+}
+
 export interface SpeechModule {
   papers: Paper[];
   articleTypes: ArticleTypeError[];
   errorTypes: Record<string, number>;
   wordPairs: WordPair[];
+  questionTypeSkills: QuestionTypeSkill[];
 }
 
 export interface LogicModule {

@@ -70,6 +70,7 @@ export function cleanDayData(data: DayData): DayData {
     wordPairs: clean.speech.wordPairs.filter((wp) =>
       [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean),
     ),
+    questionTypeSkills: clean.speech.questionTypeSkills.filter((qt) => qt.skill?.trim()),
   };
 
   // 逻辑判断
@@ -117,9 +118,54 @@ export function saveDayData(data: DayData): void {
   localStorage.setItem(getStorageKey(data.date), JSON.stringify(cleanDayData(data)));
 }
 
+/**
+ * 确保加载的数据中，每个组合至少有一个默认空条目，方便用户直接填写
+ */
+export function ensureDefaults(data: DayData): DayData {
+  const defaults = DEFAULT_DAY_DATA(data.date);
+  return {
+    ...data,
+    speech: {
+      ...data.speech,
+      papers: data.speech.papers?.length > 0 ? data.speech.papers : defaults.speech.papers,
+      articleTypes: data.speech.articleTypes?.length > 0 ? data.speech.articleTypes : defaults.speech.articleTypes,
+      wordPairs: data.speech.wordPairs?.length > 0 ? data.speech.wordPairs : defaults.speech.wordPairs,
+      questionTypeSkills: data.speech.questionTypeSkills?.length > 0 ? data.speech.questionTypeSkills : defaults.speech.questionTypeSkills,
+    },
+    logic: {
+      ...data.logic,
+      papers: data.logic.papers?.length > 0 ? data.logic.papers : defaults.logic.papers,
+    },
+    figure: {
+      ...data.figure,
+      papers: data.figure.papers?.length > 0 ? data.figure.papers : defaults.figure.papers,
+      newPatterns: data.figure.newPatterns?.length > 0 ? data.figure.newPatterns : defaults.figure.newPatterns,
+      errorPatterns: data.figure.errorPatterns?.length > 0 ? data.figure.errorPatterns : defaults.figure.errorPatterns,
+    },
+    calc: {
+      ...data.calc,
+      papers: data.calc.papers?.length > 0 ? data.calc.papers : defaults.calc.papers,
+      errorTypes: data.calc.errorTypes?.length > 0 ? data.calc.errorTypes : defaults.calc.errorTypes,
+      optimizations: data.calc.optimizations?.length > 0 ? data.calc.optimizations : defaults.calc.optimizations,
+    },
+    number: {
+      ...data.number,
+      papers: data.number.papers?.length > 0 ? data.number.papers : defaults.number.papers,
+      errorTypes: data.number.errorTypes?.length > 0 ? data.number.errorTypes : defaults.number.errorTypes,
+      skills: data.number.skills?.length > 0 ? data.number.skills : defaults.number.skills,
+    },
+    essay: {
+      ...data.essay,
+      papers: data.essay.papers?.length > 0 ? data.essay.papers : defaults.essay.papers,
+    },
+  };
+}
+
 export function loadOrCreateToday(): DayData {
   const today = getTodayStr();
-  return loadDayData(today) || DEFAULT_DAY_DATA(today);
+  const loaded = loadDayData(today);
+  if (!loaded) return DEFAULT_DAY_DATA(today);
+  return ensureDefaults(loaded);
 }
 
 export function getAllSavedDates(): string[] {
