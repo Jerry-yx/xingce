@@ -488,7 +488,7 @@ const App: React.FC = () => {
         qtSkillMap[key].dates.push(d.date);
       });
     });
-    const qtSkillList = Object.values(qtSkillMap).sort((a, b) => b.dates.length - a.dates.length);
+    // const qtSkillList = Object.values(qtSkillMap).sort((a, b) => b.dates.length - a.dates.length);
 
     // 题目类型聚合：按类型分组，收集所有技巧
     const qtGrouped: Record<number, { skills: Set<string>; dates: Set<string> }> = {};
