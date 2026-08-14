@@ -1,4 +1,4 @@
-import type { DayData } from '../types';
+import type { DayData, Paper } from '../types';
 import { STORAGE_PREFIX, DEFAULT_DAY_DATA } from './constants';
 
 export function getTodayStr(): string {
@@ -25,8 +25,96 @@ export function loadDayData(dateStr: string): DayData | null {
   }
 }
 
+/**
+ * 判断套卷是否为空（所有输入框都没有输入）
+ */
+function isPaperEmpty(p: Paper, isEssay = false): boolean {
+  if (isEssay) {
+    return (
+      p.totalQuestions === 0 &&
+      p.timeUsed === 0 &&
+      !p.overTime?.trim() &&
+      !p.scoreKeywords &&
+      !p.missKeywordsCount &&
+      !p.missKeywords?.trim()
+    );
+  }
+  return (
+    p.totalQuestions === 0 &&
+    p.timeUsed === 0 &&
+    p.errorCount === 0 &&
+    !p.circleQuestions?.trim() &&
+    !p.wrongQuestions?.trim() &&
+    !p.starQuestions?.trim() &&
+    !p.fillErrorCount &&
+    !p.centerErrorCount &&
+    !p.fillErrorQuestions?.trim() &&
+    !p.centerErrorQuestions?.trim() &&
+    !p.centerCircleQuestions?.trim() &&
+    !p.guessRightQuestions?.trim()
+  );
+}
+
+/**
+ * 清洗 DayData，移除所有空输入项（所有输入框都没有输入的可添加删除组合）
+ * 包括：套卷组合、类型、技巧、词组对比、计算优化、规律等
+ */
+export function cleanDayData(data: DayData): DayData {
+  const clean = { ...data };
+
+  // 言语理解
+  clean.speech = {
+    ...clean.speech,
+    papers: clean.speech.papers.filter((p) => !isPaperEmpty(p)),
+    articleTypes: clean.speech.articleTypes.filter((a) => a.errorCount > 0),
+    wordPairs: clean.speech.wordPairs.filter((wp) =>
+      [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean),
+    ),
+  };
+
+  // 逻辑判断
+  clean.logic = {
+    ...clean.logic,
+    papers: clean.logic.papers.filter((p) => !isPaperEmpty(p)),
+  };
+
+  // 图推
+  clean.figure = {
+    ...clean.figure,
+    papers: clean.figure.papers.filter((p) => !isPaperEmpty(p)),
+    newPatterns: clean.figure.newPatterns.filter((p) => p.value?.trim()),
+    errorPatterns: clean.figure.errorPatterns.filter((p) => p.value?.trim()),
+  };
+
+  // 资料分析
+  clean.calc = {
+    ...clean.calc,
+    papers: clean.calc.papers.filter((p) => !isPaperEmpty(p)),
+    errorTypes: clean.calc.errorTypes.filter((e) => e.type?.trim()),
+    optimizations: clean.calc.optimizations.filter(
+      (o) => o.questionNum || o.originalSteps || o.optimizedSteps,
+    ),
+  };
+
+  // 数量关系
+  clean.number = {
+    ...clean.number,
+    papers: clean.number.papers.filter((p) => !isPaperEmpty(p)),
+    errorTypes: clean.number.errorTypes.filter((e) => e.type?.trim()),
+    skills: clean.number.skills.filter((s) => s.description?.trim()),
+  };
+
+  // 申论对策
+  clean.essay = {
+    ...clean.essay,
+    papers: clean.essay.papers.filter((p) => !isPaperEmpty(p, true)),
+  };
+
+  return clean;
+}
+
 export function saveDayData(data: DayData): void {
-  localStorage.setItem(getStorageKey(data.date), JSON.stringify(data));
+  localStorage.setItem(getStorageKey(data.date), JSON.stringify(cleanDayData(data)));
 }
 
 export function loadOrCreateToday(): DayData {
