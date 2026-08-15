@@ -14,8 +14,21 @@ import { getAllDayData, loadDayData, formatDate, getAllSavedDates, saveDayData }
 import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS, LOGIC_ERROR_KEYS, QUESTION_TYPE_MAP } from "./utils/constants";
 import type { DayData, Paper, WordPair } from "./types";
 import "./styles/app.css";
+// const HL = { rate: "#52c41a", err: "#ff4d4f", time: "#1890ff", key: "#8a99b0" } as const;
 
-function mergeListByDeepEqual<T extends { id: string }>(existing: T[], imported: T[]): T[] {
+const Number = ({ t }: { t: number | string; }) => <span className="cmp-number">{t}个</span>;
+const SmallNumber = ({ t }: { t: number | string; }) => <span className="cmp-small-number">{t}个</span>;
+const Rate = ({ r }: { r: number; }) => (
+  <span className={`cmp-rate ${r < 70 ? "cmp-rate-low" : "cmp-rate-ok"}`}>{r}<span className="cmp-rate-unit">%</span></span>
+);
+const Err = ({ n }: { n: number; }) => (
+  <span className="cmp-err">{n}<span className="cmp-unit">个</span></span>
+);
+const Time = ({ t }: { t: number; }) => (
+  <span className="cmp-time">{t}<span className="cmp-unit">min</span></span>
+);
+
+function mergeListByDeepEqual<T extends { id: string; }>(existing: T[], imported: T[]): T[] {
   const result = [...existing];
   const existingKeys = new Set(existing.map((item) => JSON.stringify({ ...item, id: undefined })));
   imported.forEach((item) => {
@@ -110,7 +123,7 @@ const App: React.FC = () => {
         if (key === "speech" && d.speech) {
           if (d.speech.articleTypes?.length) {
             const parts = d.speech.articleTypes
-              .map((a: { type: number; errorCount: number }) => `${ARTICLE_TYPE_MAP[a.type] || "未知"}错误：${a.errorCount}个`)
+              .map((a: { type: number; errorCount: number; }) => `${ARTICLE_TYPE_MAP[a.type] || "未知"}错误：${a.errorCount}个`)
               .join("  ");
             text += `  ${parts}\n`;
           }
@@ -305,12 +318,8 @@ const App: React.FC = () => {
   const renderHistory = () => {
     if (!historyData) return <div style={{ textAlign: "center", padding: 40, color: "#999" }}>请选择日期</div>;
     const d = historyData;
-    const HL = { rate: "#52c41a", err: "#ff4d4f", time: "#1890ff", key: "#8a99b0" } as const;
-    const Rate = ({ r }: { r: number }) => <span style={{ color: r < 70 ? "#ff4d4f" : HL.rate, fontWeight: 600 }}>{r}%</span>;
-    const Err = ({ n }: { n: number }) => <span style={{ color: HL.err, fontWeight: 600 }}>{n}个</span>;
-    const Time = ({ t }: { t: number }) => <span style={{ color: HL.time, fontWeight: 600 }}>{t}min</span>;
 
-    const moduleConfigs: { key: keyof DayData; title: string }[] = [
+    const moduleConfigs: { key: keyof DayData; title: string; }[] = [
       { key: "speech", title: "🧠 言语理解" },
       { key: "logic", title: "🧩 逻辑判断" },
       { key: "figure", title: "🎨 图推" },
@@ -340,14 +349,14 @@ const App: React.FC = () => {
                       const totalErr = (p.fillErrorCount || 0) + (p.centerErrorCount || 0);
                       const rate = p.totalQuestions > 0 ? Math.round(((p.totalQuestions - totalErr) / p.totalQuestions) * 100) : 0;
                       return (
-                        <div key={i}>
+                        <div key={i} className="cmp-p-section">
                           <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
                             套卷{i + 1} {p.name || ""}
                           </div>
                           <div style={detailStyle}>
                             <span style={labelStyle}>正确率：</span><Rate r={rate} />
                             <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                            <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                            <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
                             {(p.fillErrorCount || p.centerErrorCount) ? (
                               <span style={{ marginLeft: 12 }}>
                                 <span style={labelStyle}>选词填空错：</span><Err n={p.fillErrorCount || 0} />
@@ -368,7 +377,7 @@ const App: React.FC = () => {
                     }
                     if (key === "essay") {
                       return (
-                        <div key={i}>
+                        <div key={i} className="cmp-p-section">
                           <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
                             套卷{i + 1} {p.name || ""}
                           </div>
@@ -384,22 +393,22 @@ const App: React.FC = () => {
                     const correct = p.totalQuestions - p.errorCount;
                     const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
                     return (
-                      <div key={i}>
+                      <div key={i} className="cmp-p-section">
                         <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
                           套卷{i + 1} {p.name || ""}
                         </div>
                         <div style={detailStyle}>
                           <span style={labelStyle}>正确率：</span><Rate r={rate} />
                           <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                          <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                          <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
                           <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
                         </div>
                         {(p.circleQuestions || p.wrongQuestions || p.starQuestions || (key === "number" && p.guessRightQuestions)) ? (
                           <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-                            {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
-                            {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
-                            {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
-                            {key === "number" && p.guessRightQuestions ? <span><span style={labelStyle}>蒙对：</span>{p.guessRightQuestions}</span> : null}
+                            {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span><SmallNumber t={p.circleQuestions} /></span> : null}
+                            {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span><SmallNumber t={p.wrongQuestions} /></span> : null}
+                            {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span><SmallNumber t={p.starQuestions} /></span> : null}
+                            {key === "number" && p.guessRightQuestions ? <span><span style={labelStyle}>蒙对：</span><SmallNumber t={p.guessRightQuestions} /></span> : null}
                           </div>
                         ) : null}
                       </div>
@@ -409,48 +418,63 @@ const App: React.FC = () => {
                   {key === "speech" && d.speech && (
                     <>
                       {d.speech.articleTypes?.length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>文章类型错误：</span>
-                          {d.speech.articleTypes.map((a, idx) => (
-                            <span key={idx} style={{ marginRight: 12 }}>
-                              {ARTICLE_TYPE_MAP[a.type] || "未知"}：<Err n={a.errorCount} />
-                              {a.skill?.trim() ? <> | 技巧：{a.skill}</> : null}
-                            </span>
-                          ))}
-                        </div>
+                        <>
+                          <div className="cmp-sub-group">
+                            <span className="cmp-sub-label">文章类型错误</span>
+                            <div className="cmp-chip-wrap">
+                              {d.speech.articleTypes.map((a, idx) => (
+                                <div key={idx} className="cmp-chip">
+                                  {ARTICLE_TYPE_MAP[a.type] || "未知"}
+                                  <span className="cmp-chip-num-red">{a.errorCount}</span>
+                                  {a.skill?.trim() ? <><span className="cmp-chip-unit">{a.skill}</span></> : null}
+                                </div>
+                              ))}
+                            </div>
+                          </div></>
                       ) : null}
                       {SPEECH_ERROR_KEYS.some((k) => (d.speech.errorTypes?.[k.key] || 0) > 0) ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错误选项：</span>
-                          {SPEECH_ERROR_KEYS.filter((k) => (d.speech.errorTypes?.[k.key] || 0) > 0).map((k) => (
-                            <span key={k.key} style={{ marginRight: 12 }}>
-                              {k.label}：<Err n={d.speech.errorTypes[k.key] || 0} />
-                            </span>
-                          ))}
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">错误选项</span>
+                          <div className="cmp-chip-wrap">
+                            {SPEECH_ERROR_KEYS.filter((k) => (d.speech?.errorTypes?.[k.key] || 0) > 0).map((k) => (
+                              <div key={k.key} className="cmp-chip">
+                                {k.label}
+                                <span className="cmp-chip-num-red">{d.speech?.errorTypes?.[k.key] || 0}</span>
+                                <span className="cmp-chip-unit">次</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ) : null}
                       {d.speech.wordPairs?.filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean)).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>词组对比：</span>
-                          {d.speech.wordPairs
-                            .filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean))
-                            .map((wp, idx) => (
-                              <div key={idx} style={{ marginLeft: 12 }}>
-                                {[wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].filter(Boolean).join(" / ")}
-                              </div>
-                            ))}
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">词组对比</span>
+                          <div className="cmp-chip-wrap">
+                            {d.speech.wordPairs
+                              .filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean))
+                              .map((wp, idx) => (
+                                <div key={idx} className="cmp-chip">
+                                  {[wp.signalWord, wp.selectedWord, wp.compareWord].filter(Boolean).join(" / ")}
+                                  <span className="cmp-chip-num-red">{wp.note}</span>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
                       {d.speech.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>题目类型与技巧：</span>
-                          {d.speech.questionTypeSkills
-                            .filter((qt) => qt.skill?.trim())
-                            .map((qt, idx) => (
-                              <div key={idx} style={{ marginLeft: 12 }}>
-                                {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
-                              </div>
-                            ))}
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">题目类型与技巧</span>
+                          <div className="cmp-chip-wrap">
+                            {d.speech.questionTypeSkills
+                              .filter((qt) => qt.skill?.trim())
+                              .map((qt, idx) => (
+                                <div key={idx} className="cmp-chip">
+                                  {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}
+
+                                  <span className="cmp-chip-unit">{qt.skill}</span>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
                     </>
@@ -459,26 +483,33 @@ const App: React.FC = () => {
                   {key === "logic" && d.logic && (
                     <>
                       {LOGIC_ERROR_KEYS.some((k) => (d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0) > 0) ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错因：</span>
-                          {LOGIC_ERROR_KEYS.filter((k) => (d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0) > 0).map((k) => (
-                            <span key={k.key} style={{ marginRight: 12 }}>
-                              {k.key}({k.label})：<Err n={d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0} />
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                      {d.logic.hardestQuestions ? <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}><span style={{ fontWeight: 600, color: "#4a5b79" }}>🎯 最难追及：</span>{d.logic.hardestQuestions}</div> : null}
-                      {d.logic.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>题目类型与技巧：</span>
-                          {d.logic.questionTypeSkills
-                            .filter((qt) => qt.skill?.trim())
-                            .map((qt, idx) => (
-                              <div key={idx} style={{ marginLeft: 12 }}>
-                                {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">错因</span>
+                          <div className="cmp-chip-wrap">
+                            {LOGIC_ERROR_KEYS.filter((k) => (d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0) > 0).map((k) => (
+                              <div key={k.key} className="cmp-chip">
+                                {k.key}({k.label})
+                                <span className="cmp-chip-num-red">{d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0}</span>
                               </div>
                             ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {d.logic?.hardestQuestions ? <div className="cmp-sub-group"><span >🎯 最难追及：</span>{d.logic.hardestQuestions}</div> : null}
+                      {d.logic?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">题目类型与技巧</span>
+                          <div className="cmp-chip-wrap">
+                            {d.logic.questionTypeSkills
+                              .filter((qt) => qt.skill?.trim())
+                              .map((qt, idx) => (
+                                <div key={idx} className="cmp-chip">
+                                  {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}
+
+                                  <span className="cmp-chip-unit">{qt.skill}</span>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
                     </>
@@ -486,22 +517,34 @@ const App: React.FC = () => {
                   {/* 图推特有 */}
                   {key === "figure" && d.figure && (
                     <>
-                      {d.figure.newPatterns?.filter((p) => p.value?.trim()).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>新规律：</span>
-                          {d.figure.newPatterns
-                            .filter((p) => p.value?.trim())
-                            .map((p) => p.value)
-                            .join(" | ")}
+                      {d.figure?.newPatterns?.filter((p) => p.value?.trim()).length ? (
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">新规律</span>
+                          <div className="cmp-chip-wrap">
+                            {d.figure.newPatterns
+                              .filter((p) => p.value?.trim())
+                              .map((p, idx) => (
+                                <div key={idx} className="cmp-chip cmp-chip-green">
+                                  <span className="cmp-badge cmp-badge-new">新</span>
+                                  {p.value}
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
-                      {d.figure.errorPatterns?.filter((p) => p.value?.trim()).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错误规律：</span>
-                          {d.figure.errorPatterns
-                            .filter((p) => p.value?.trim())
-                            .map((p) => p.value)
-                            .join(" | ")}
+                      {d.figure?.errorPatterns?.filter((p) => p.value?.trim()).length ? (
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">错误规律</span>
+                          <div className="cmp-chip-wrap">
+                            {d.figure.errorPatterns
+                              .filter((p) => p.value?.trim())
+                              .map((p, idx) => (
+                                <div key={idx} className="cmp-chip cmp-chip-red-pattern">
+                                  <span className="cmp-badge cmp-badge-err">错</span>
+                                  {p.value}
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
                     </>
@@ -509,25 +552,37 @@ const App: React.FC = () => {
                   {/* 资料分析特有 */}
                   {key === "calc" && d.calc && (
                     <>
-                      {d.calc.errorTypes?.filter((e) => e.type?.trim()).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错误类型：</span>
+                      <div className="cmp-sub-group">
+                        <span className="cmp-sub-label">错误类型</span>
+                        <div className="cmp-chip-wrap">
                           {d.calc.errorTypes
                             .filter((e) => e.type?.trim())
-                            .map((e) => `${e.type}:${e.errorCount}题${e.skill?.trim() ? ` (${e.skill})` : ""}`)
-                            .join("  ")}
-                        </div>
-                      ) : null}
-                      {d.calc.optimizations?.filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>计算优化：</span>
-                          {d.calc.optimizations
-                            .filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps)
-                            .map((o, idx) => (
-                              <div key={idx} style={{ marginLeft: 12 }}>
-                                题{o.questionNum || "?"}：{o.originalSteps || "?"}→{o.optimizedSteps || "?"}
+                            .map((e, idx) => (
+                              <div key={idx} className="cmp-chip">
+                                {e.type}
+                                <span className="cmp-chip-num-red">{e.errorCount}</span>
+
+                                <span className="cmp-chip-unit">题</span>
+                                {e.skill?.trim() ? <><span className="cmp-chip-unit">{e.skill}</span></> : null}
                               </div>
                             ))}
+                        </div>
+                      </div>
+
+                      {d.calc.optimizations?.filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps).length ? (
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">计算优化</span>
+                          <div className="cmp-chip-wrap">
+                            {d.calc.optimizations
+                              .filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps)
+                              .map((o, idx) => (
+                                <div key={idx} className="cmp-chip">
+                                  题{o.questionNum || "?"}
+
+                                  <span className="cmp-chip-unit">{o.originalSteps || "?"}→{o.optimizedSteps || "?"}</span>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
                     </>
@@ -535,13 +590,20 @@ const App: React.FC = () => {
                   {/* 数量关系特有 */}
                   {key === "number" && d.number && (
                     <>
-                      {d.number.errorTypes?.filter((e) => e.type?.trim()).length ? (
-                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错因：</span>
-                          {d.number.errorTypes
-                            .filter((e) => e.type?.trim())
-                            .map((e) => `${e.type}:${e.errorCount}${e.skill?.trim() ? ` (${e.skill})` : ""}`)
-                            .join("  ")}
+                      {d.number?.errorTypes?.filter((e) => e.type?.trim()).length ? (
+                        <div className="cmp-sub-group">
+                          <span className="cmp-sub-label">错因</span>
+                          <div className="cmp-chip-wrap">
+                            {d.number.errorTypes
+                              .filter((e) => e.type?.trim())
+                              .map((e, idx) => (
+                                <div key={idx} className="cmp-chip">
+                                  {e.type}
+                                  <span className="cmp-chip-num-red">{e.errorCount}</span>
+                                  {e.skill?.trim() ? <><span className="cmp-chip-unit">{e.skill}</span></> : null}
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       ) : null}
                     </>
@@ -560,13 +622,13 @@ const App: React.FC = () => {
     const allData = getAllDayData();
     const [pairSort, setPairSort] = React.useState<"time" | "count">("time");
     // 词对：按selectedWord去重统计次数
-    const pairMap: Record<string, { pair: string; note: string; selectedWord: string; dates: string[]; errorCount: number }> = {};
+    const pairMap: Record<string, { pair: string; note: string; selectedWord: string; dates: string[]; errorCount: number; }> = {};
     // 申论漏抄词：按词语去重统计次数
-    const missWordMap: Record<string, { word: string; count: number }> = {};
-    const allOptimizations: { date: string; content: string }[] = [];
-    const allSkills: { date: string; content: string }[] = [];
+    const missWordMap: Record<string, { word: string; count: number; }> = {};
+    const allOptimizations: { date: string; content: string; }[] = [];
+    const allSkills: { date: string; content: string; }[] = [];
     // 图推规律：去重统计
-    const allFigurePatterns: Record<string, { type: string; count: number }> = {};
+    const allFigurePatterns: Record<string, { type: string; count: number; }> = {};
 
     allData.forEach((d) => {
       // 词对
@@ -625,7 +687,7 @@ const App: React.FC = () => {
     }
 
     // 题目类型与技巧汇总
-    const qtSkillMap: Record<string, { questionType: string; skills: string[]; dates: string[] }> = {};
+    const qtSkillMap: Record<string, { questionType: string; skills: string[]; dates: string[]; }> = {};
     allData.forEach((d) => {
       d.speech?.questionTypeSkills?.forEach((qt) => {
         if (!qt.skill?.trim()) return;
@@ -640,7 +702,7 @@ const App: React.FC = () => {
     // const qtSkillList = Object.values(qtSkillMap).sort((a, b) => b.dates.length - a.dates.length);
 
     // 题目类型聚合：按类型分组，收集所有技巧
-    const qtGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    const qtGrouped: Record<string, { skills: Set<string>; dates: Set<string>; }> = {};
     allData.forEach((d) => {
       d.speech?.questionTypeSkills?.forEach((qt) => {
         if (!qt.skill?.trim()) return;
@@ -660,7 +722,7 @@ const App: React.FC = () => {
       .sort((a, b) => b.dayCount - a.dayCount);
 
     // 言语文章类型技巧聚合
-    const articleSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    const articleSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string>; }> = {};
     allData.forEach((d) => {
       d.speech?.articleTypes?.forEach((a) => {
         if (!a.skill?.trim()) return;
@@ -675,7 +737,7 @@ const App: React.FC = () => {
       .sort((a, b) => b.dayCount - a.dayCount);
 
     // 判断技巧聚合
-    const logicSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    const logicSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string>; }> = {};
     allData.forEach((d) => {
       d.logic?.questionTypeSkills?.forEach((qt) => {
         if (!qt.skill?.trim()) return;
@@ -689,7 +751,7 @@ const App: React.FC = () => {
       .sort((a, b) => b.dayCount - a.dayCount);
 
     // 资料分析技巧聚合
-    const calcSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    const calcSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string>; }> = {};
     allData.forEach((d) => {
       d.calc?.errorTypes?.forEach((e) => {
         if (!e.skill?.trim()) return;
@@ -704,7 +766,7 @@ const App: React.FC = () => {
       .sort((a, b) => b.dayCount - a.dayCount);
 
     // 数量关系技巧聚合
-    const numSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    const numSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string>; }> = {};
     allData.forEach((d) => {
       d.number?.errorTypes?.forEach((e) => {
         if (!e.skill?.trim()) return;
@@ -911,100 +973,88 @@ const App: React.FC = () => {
   const renderCompare = (externalData?: DayData[]) => {
     const allData = externalData || getAllDayData();
     // 仅改 Rate / Err / Time 三个数字样式（字号、字重、颜色），不改变任何文字结构
-    const Rate = ({ r }: { r: number }) => (
-      <span style={{
-        fontSize: 22,
-        fontWeight: 800,
-        color: r < 70 ? "#EF4444" : "#22C55E",
-        letterSpacing: 0.3
-      }}>{r}<span style={{ fontSize: 13, fontWeight: 700 }}>%</span></span>
-    );
-    const Err = ({ n }: { n: number }) => (
-      <span style={{
-        fontSize: 22,
-        fontWeight: 800,
-        color: "#EF4444",
-        letterSpacing: 0.3
-      }}>{n}<span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>个</span></span>
-    );
-    const Time = ({ t }: { t: number }) => (
-      <span style={{
-        fontSize: 22,
-        fontWeight: 800,
-        color: "#165DFF",
-        letterSpacing: 0.3
-      }}>{t}<span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>min</span></span>
-    );
 
     const renderDayDetail = (d: DayData, moduleKey: string): React.ReactNode => {
-      const detailStyle = { paddingLeft: 16, fontSize: 13, lineHeight: 2.2 };
-      const labelStyle = { fontWeight: 600, color: "#4a5b79" };
+      const detailStyle = "cmp-detail";
+      const labelStyle = "cmp-label";
+      const detailFlexStyle = "cmp-detail-flex";
       if (moduleKey === "speech") {
         const papers = d.speech?.papers || [];
-        if (!papers.length && !d.speech?.articleTypes?.length && !d.speech?.wordPairs?.length && !d.speech?.questionTypeSkills?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length && !d.speech?.articleTypes?.length && !d.speech?.wordPairs?.length && !d.speech?.questionTypeSkills?.length) return <span className="cmp-empty">(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
               const totalErr = (p.fillErrorCount || 0) + (p.centerErrorCount || 0);
               const rate = p.totalQuestions > 0 ? Math.round(((p.totalQuestions - totalErr) / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                <div key={i} className="cmp-p-section">
+                  <div className="cmp-paper-title">
                     套卷{i + 1} {p.name || ""}
                   </div>
-                  <div style={detailStyle}>
-                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                  <div className={detailStyle}>
+                    <span className={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span className="cmp-ml12"><span className={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
                     {(p.fillErrorCount || p.centerErrorCount) ? (
-                      <span style={{ marginLeft: 12 }}>
-                        <span style={labelStyle}>选词填空错：</span><Err n={p.fillErrorCount || 0} />
-                        <span style={{ marginLeft: 8 }}><span style={labelStyle}>中心理解错：</span><Err n={p.centerErrorCount || 0} /></span>
-                        <span style={{ marginLeft: 8 }}><span style={labelStyle}>总错误：</span><Err n={totalErr} /></span>
+                      <span className="cmp-ml12">
+                        <span className={labelStyle}>选词填空错：</span><Err n={p.fillErrorCount || 0} />
+                        <span className="cmp-ml8"><span className={labelStyle}>中心理解错：</span><Err n={p.centerErrorCount || 0} /></span>
+                        <span className="cmp-ml8"><span className={labelStyle}>总错误：</span><Err n={totalErr} /></span>
                       </span>
                     ) : null}
                   </div>
                   {(p.centerCircleQuestions || p.fillErrorQuestions || p.centerErrorQuestions) ? (
-                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-                      {p.centerCircleQuestions ? <span><span style={labelStyle}>⭕ 中心画圈：</span>{p.centerCircleQuestions}</span> : null}
-                      {p.fillErrorQuestions ? <span><span style={labelStyle}>❌ 选词错题：</span>{p.fillErrorQuestions}</span> : null}
-                      {p.centerErrorQuestions ? <span><span style={labelStyle}>❌ 中心错题：</span>{p.centerErrorQuestions}</span> : null}
+                    <div className={detailFlexStyle}>
+                      {p.centerCircleQuestions ? <span><span className={labelStyle}>⭕ 中心画圈：</span>{p.centerCircleQuestions}</span> : null}
+                      {p.fillErrorQuestions ? <span><span className={labelStyle}>❌ 选词错题：</span>{p.fillErrorQuestions}</span> : null}
+                      {p.centerErrorQuestions ? <span><span className={labelStyle}>❌ 中心错题：</span>{p.centerErrorQuestions}</span> : null}
                     </div>
                   ) : null}
                 </div>
               );
             })}
             {d.speech?.articleTypes?.length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>文章类型错误：</span>
-                {d.speech.articleTypes.map((a, idx) => (
-                  <span key={idx} style={{ marginRight: 12 }}>
-                    {ARTICLE_TYPE_MAP[a.type] || "未知"}：<Err n={a.errorCount} />
-                    {a.skill?.trim() ? <> | 技巧：{a.skill}</> : null}
-                  </span>
-                ))}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">文章类型错误</span>
+                <div className="cmp-chip-wrap">
+                  {d.speech.articleTypes.map((a, idx) => (
+                    <div key={idx} className="cmp-chip">
+                      {ARTICLE_TYPE_MAP[a.type] || "未知"}
+                      <span className="cmp-chip-num-red">{a.errorCount}</span>
+                      {a.skill?.trim() ? <><span className="cmp-chip-unit">{a.skill}</span></> : null}
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
             {SPEECH_ERROR_KEYS.some((k) => (d.speech?.errorTypes?.[k.key] || 0) > 0) ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>错误选项：</span>
-                {SPEECH_ERROR_KEYS.filter((k) => (d.speech?.errorTypes?.[k.key] || 0) > 0).map((k) => (
-                  <span key={k.key} style={{ marginRight: 12 }}>
-                    {k.label}：<Err n={d.speech?.errorTypes?.[k.key] || 0} />
-                  </span>
-                ))}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">错误选项</span>
+                <div className="cmp-chip-wrap">
+                  {SPEECH_ERROR_KEYS.filter((k) => (d.speech?.errorTypes?.[k.key] || 0) > 0).map((k) => (
+                    <div key={k.key} className="cmp-chip">
+                      {k.label}
+                      <span className="cmp-chip-num-red">{d.speech?.errorTypes?.[k.key] || 0}</span>
+                      <span className="cmp-chip-unit">次</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
             {d.speech?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>题目类型与技巧：</span>
-                {d.speech.questionTypeSkills
-                  .filter((qt) => qt.skill?.trim())
-                  .map((qt, idx) => (
-                    <div key={idx} style={{ marginLeft: 12 }}>
-                      {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
-                    </div>
-                  ))}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">题目类型与技巧</span>
+                <div className="cmp-chip-wrap">
+                  {d.speech.questionTypeSkills
+                    .filter((qt) => qt.skill?.trim())
+                    .map((qt, idx) => (
+                      <div key={idx} className="cmp-chip">
+                        {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}
+
+                        <span className="cmp-chip-unit">{qt.skill}</span>
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
           </>
@@ -1012,54 +1062,61 @@ const App: React.FC = () => {
       }
       if (moduleKey === "logic") {
         const papers = d.logic?.papers || [];
-        if (!papers.length && !d.logic) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length && !d.logic) return <span className="cmp-empty">(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                <div key={i} className="cmp-p-section">
+                  <div className="cmp-paper-title">
                     套卷{i + 1} {p.name || ""}
                   </div>
-                  <div style={detailStyle}>
-                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  <div className={detailStyle}>
+                    <span className={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span className="cmp-ml12"><span className={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
                   </div>
                   {(p.circleQuestions || p.wrongQuestions || p.starQuestions) ? (
-                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
-                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
-                      {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                    <div className={detailFlexStyle}>
+                      {p.circleQuestions ? <span><span className={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span className={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                      {p.starQuestions ? <span><span className={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
                     </div>
                   ) : null}
                 </div>
               );
             })}
             {LOGIC_ERROR_KEYS.some((k) => (d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0) > 0) ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>错因：</span>
-                {LOGIC_ERROR_KEYS.filter((k) => (d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0) > 0).map((k) => (
-                  <span key={k.key} style={{ marginRight: 12 }}>
-                    {k.key}({k.label})：<Err n={d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0} />
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            {d.logic?.hardestQuestions ? <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}><span style={labelStyle}>🎯 最难追及：</span>{d.logic.hardestQuestions}</div> : null}
-            {d.logic?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>题目类型与技巧：</span>
-                {d.logic.questionTypeSkills
-                  .filter((qt) => qt.skill?.trim())
-                  .map((qt, idx) => (
-                    <div key={idx} style={{ marginLeft: 12 }}>
-                      {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">错因</span>
+                <div className="cmp-chip-wrap">
+                  {LOGIC_ERROR_KEYS.filter((k) => (d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0) > 0).map((k) => (
+                    <div key={k.key} className="cmp-chip">
+                      {k.key}({k.label})
+                      <span className="cmp-chip-num-red">{d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            ) : null}
+            {d.logic?.hardestQuestions ? <div className="cmp-sub-group"><span className={labelStyle}>🎯 最难追及：</span>{d.logic.hardestQuestions}</div> : null}
+            {d.logic?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">题目类型与技巧</span>
+                <div className="cmp-chip-wrap">
+                  {d.logic.questionTypeSkills
+                    .filter((qt) => qt.skill?.trim())
+                    .map((qt, idx) => (
+                      <div key={idx} className="cmp-chip">
+                        {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}
+
+                        <span className="cmp-chip-unit">{qt.skill}</span>
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
           </>
@@ -1068,49 +1125,61 @@ const App: React.FC = () => {
       if (moduleKey === "figure") {
         const papers = d.figure?.papers || [];
         if (!papers.length && !d.figure?.newPatterns?.length && !d.figure?.errorPatterns?.length)
-          return <span style={{ color: "#bbb" }}>(无记录)</span>;
+          return <span className="cmp-empty">(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                <div key={i} className="cmp-p-section">
+                  <div className="cmp-paper-title">
                     套卷{i + 1} {p.name || ""}
                   </div>
-                  <div style={detailStyle}>
-                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  <div className={detailStyle}>
+                    <span className={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span className="cmp-ml12"><span className={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
                   </div>
                   {(p.circleQuestions || p.wrongQuestions || p.starQuestions) ? (
-                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
-                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
-                      {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                    <div className={detailFlexStyle}>
+                      {p.circleQuestions ? <span><span className={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span className={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                      {p.starQuestions ? <span><span className={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
                     </div>
                   ) : null}
                 </div>
               );
             })}
             {d.figure?.newPatterns?.filter((p) => p.value?.trim()).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>新规律：</span>
-                {d.figure.newPatterns
-                  .filter((p) => p.value?.trim())
-                  .map((p) => p.value)
-                  .join(" | ")}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">新规律</span>
+                <div className="cmp-chip-wrap">
+                  {d.figure.newPatterns
+                    .filter((p) => p.value?.trim())
+                    .map((p, idx) => (
+                      <div key={idx} className="cmp-chip cmp-chip-green">
+                        <span className="cmp-badge cmp-badge-new">新</span>
+                        {p.value}
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
             {d.figure?.errorPatterns?.filter((p) => p.value?.trim()).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>错误规律：</span>
-                {d.figure.errorPatterns
-                  .filter((p) => p.value?.trim())
-                  .map((p) => p.value)
-                  .join(" | ")}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">错误规律</span>
+                <div className="cmp-chip-wrap">
+                  {d.figure.errorPatterns
+                    .filter((p) => p.value?.trim())
+                    .map((p, idx) => (
+                      <div key={idx} className="cmp-chip cmp-chip-red-pattern">
+                        <span className="cmp-badge cmp-badge-err">错</span>
+                        {p.value}
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
           </>
@@ -1118,51 +1187,64 @@ const App: React.FC = () => {
       }
       if (moduleKey === "calc") {
         const papers = d.calc?.papers || [];
-        if (!papers.length && !d.calc?.errorTypes?.length && !d.calc?.optimizations?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length && !d.calc?.errorTypes?.length && !d.calc?.optimizations?.length) return <span className="cmp-empty">(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                <div key={i} className="cmp-p-section">
+                  <div className="cmp-paper-title">
                     套卷{i + 1} {p.name || ""}
                   </div>
-                  <div style={detailStyle}>
-                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  <div className={detailStyle}>
+                    <span className={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span className="cmp-ml12"><span className={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
                   </div>
                   {(p.circleQuestions || p.wrongQuestions) ? (
-                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
-                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                    <div className={detailFlexStyle}>
+                      {p.circleQuestions ? <span><span className={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span className={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
                     </div>
                   ) : null}
                 </div>
               );
             })}
             {d.calc?.errorTypes?.filter((e) => e.type?.trim()).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>错误类型：</span>
-                {d.calc.errorTypes
-                  .filter((e) => e.type?.trim())
-                  .map((e) => `${e.type}:${e.errorCount}题${e.skill?.trim() ? ` (${e.skill})` : ""}`)
-                  .join("  ")}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">错误类型</span>
+                <div className="cmp-chip-wrap">
+                  {d.calc.errorTypes
+                    .filter((e) => e.type?.trim())
+                    .map((e, idx) => (
+                      <div key={idx} className="cmp-chip">
+                        {e.type}
+                        <span className="cmp-chip-num-red">{e.errorCount}</span>
+
+                        <span className="cmp-chip-unit">题</span>
+                        {e.skill?.trim() ? <><span className="cmp-chip-unit">{e.skill}</span></> : null}
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
             {d.calc?.optimizations?.filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>计算优化：</span>
-                {d.calc.optimizations
-                  .filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps)
-                  .map((o, idx) => (
-                    <div key={idx} style={{ marginLeft: 12 }}>
-                      题{o.questionNum || "?"}：{o.originalSteps || "?"}→{o.optimizedSteps || "?"}
-                    </div>
-                  ))}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">计算优化</span>
+                <div className="cmp-chip-wrap">
+                  {d.calc.optimizations
+                    .filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps)
+                    .map((o, idx) => (
+                      <div key={idx} className="cmp-chip">
+                        题{o.questionNum || "?"}
+
+                        <span className="cmp-chip-unit">{o.originalSteps || "?"}→{o.optimizedSteps || "?"}</span>
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
           </>
@@ -1170,41 +1252,48 @@ const App: React.FC = () => {
       }
       if (moduleKey === "number") {
         const papers = d.number?.papers || [];
-        if (!papers.length && !d.number?.errorTypes?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length && !d.number?.errorTypes?.length) return <span className="cmp-empty">(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                <div key={i} className="cmp-p-section">
+                  <div className="cmp-paper-title">
                     套卷{i + 1} {p.name || ""}
                   </div>
-                  <div style={detailStyle}>
-                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
-                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  <div className={detailStyle}>
+                    <span className={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span className="cmp-ml12"><span className={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>总题数：</span><Number t={p.totalQuestions} /></span>
+                    <span className="cmp-ml12"><span className={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
                   </div>
                   {(p.circleQuestions || p.guessRightQuestions || p.wrongQuestions || p.starQuestions) ? (
-                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
-                      {p.guessRightQuestions ? <span><span style={labelStyle}>蒙对：</span>{p.guessRightQuestions}</span> : null}
-                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
-                      {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                    <div className={detailFlexStyle}>
+                      {p.circleQuestions ? <span><span className={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.guessRightQuestions ? <span><span className={labelStyle}>蒙对：</span>{p.guessRightQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span className={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                      {p.starQuestions ? <span><span className={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
                     </div>
                   ) : null}
                 </div>
               );
             })}
             {d.number?.errorTypes?.filter((e) => e.type?.trim()).length ? (
-              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
-                <span style={labelStyle}>错因：</span>
-                {d.number.errorTypes
-                  .filter((e) => e.type?.trim())
-                  .map((e) => `${e.type}:${e.errorCount}${e.skill?.trim() ? ` (${e.skill})` : ""}`)
-                  .join("  ")}
+              <div className="cmp-sub-group">
+                <span className="cmp-sub-label">错因</span>
+                <div className="cmp-chip-wrap">
+                  {d.number.errorTypes
+                    .filter((e) => e.type?.trim())
+                    .map((e, idx) => (
+                      <div key={idx} className="cmp-chip">
+                        {e.type}
+                        <span className="cmp-chip-num-red">{e.errorCount}</span>
+                        {e.skill?.trim() ? <><span className="cmp-chip-unit">{e.skill}</span></> : null}
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : null}
           </>
@@ -1212,38 +1301,38 @@ const App: React.FC = () => {
       }
       if (moduleKey === "essay") {
         const papers = d.essay?.papers || [];
-        if (!papers.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length) return <span className="cmp-empty">(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => (
-              <div key={i}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+              <div key={i} className="cmp-p-section">
+                <div className="cmp-paper-title">
                   套卷{i + 1} {p.name || ""}
                 </div>
-                <div style={detailStyle}>
-                  {p.isOverTime ? <span style={{ fontSize: 20, fontWeight: 800, color: "#22C55E", letterSpacing: 0.3 }}>未超时</span> : p.overTime ? (
+                <div className={detailStyle}>
+                  {p.isOverTime ? <span className="cmp-essay-ok">未超时</span> : p.overTime ? (
                     <span>
-                      <span style={labelStyle}>超时</span>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: "#EF4444", marginLeft: 4, letterSpacing: 0.3 }}>{p.overTime}</span>
+                      <span className={labelStyle}>超时</span>
+                      <span className="cmp-essay-over">{p.overTime}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>min</span>
                     </span>
                   ) : null}
                   {p.scoreKeywords ? (
-                    <span style={{ marginLeft: 12 }}>
-                      <span style={labelStyle}>得分词：</span>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: "#22C55E", letterSpacing: 0.3 }}>{p.scoreKeywords}</span>
+                    <span className="cmp-ml12">
+                      <span className={labelStyle}>得分词：</span>
+                      <span className="cmp-essay-score">{p.scoreKeywords}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>个</span>
                     </span>
                   ) : null}
                   {p.missKeywordsCount ? (
-                    <span style={{ marginLeft: 12 }}>
-                      <span style={labelStyle}>漏抄：</span>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: "#EF4444", letterSpacing: 0.3 }}>{p.missKeywordsCount}</span>
+                    <span className="cmp-ml12">
+                      <span className={labelStyle}>漏抄：</span>
+                      <span className="cmp-essay-miss">{p.missKeywordsCount}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>个</span>
                     </span>
                   ) : null}
                 </div>
-                {p.missKeywords ? <div style={detailStyle}><span style={labelStyle}>漏抄词：</span>{p.missKeywords}</div> : null}
+                {p.missKeywords ? <div className={detailStyle}><span className={labelStyle}>漏抄词：</span>{p.missKeywords}</div> : null}
               </div>
             ))}
           </>
@@ -1251,7 +1340,7 @@ const App: React.FC = () => {
       }
       if (moduleKey === "wordpair") {
         const wps = d.speech?.wordPairs?.filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean)) || [];
-        if (!wps.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!wps.length) return <span className="cmp-empty">(无记录)</span>;
         return (
           <div style={{ paddingLeft: 16 }}>
             {wps.map((wp, idx) => (
@@ -1271,7 +1360,7 @@ const App: React.FC = () => {
         <Divider style={{ margin: "8px 0" }} />
         {allData.map((d) => (
           <div key={d.date}>
-            <div style={{ fontWeight: 600, color: "#1a2b4c", fontSize: 13, marginBottom: 4 }}>{formatDate(d.date)}</div>
+            <div className="cmp-date">{formatDate(d.date)}</div>
             {renderDayDetail(d, moduleKey)}
           </div>
         ))}
@@ -1298,60 +1387,50 @@ const App: React.FC = () => {
               qtAgg[name] = (qtAgg[name] || 0) + 1;
             });
           });
-          const chipWrap: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, padding: "4px 0 8px 0" };
-          const chipBase: React.CSSProperties = {
-            display: "inline-flex", alignItems: "center",
-            background: "#ffffff", border: "1px solid #E0E7F1",
-            borderRadius: 10, padding: "6px 16px",
-            fontSize: 14, color: "#1E293B", fontWeight: 700
-          };
-          const chipNumBlue = (n: number) => <span style={{ fontSize: 18, fontWeight: 800, color: "#165DFF", marginLeft: 6 }}>{n}</span>;
-          const chipNumRed = (n: number) => <span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{n}</span>;
           return (
             <>
-              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📝 文章类型</span>
-                  <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#64748B", background: "#EEF2F7", borderRadius: 999 }}>错误分布</span>
+              <div className="cmp-chip-card">
+                <div className="cmp-chip-header">
+                  <span className="cmp-chip-title">📝 文章类型</span>
+                  {/* <span className="cmp-chip-tag cmp-chip-tag-gray">错误分布</span> */}
                 </div>
-                <div style={chipWrap}>
+                <div className="cmp-chip-wrap">
                   {Object.entries(articleAgg).length ? Object.entries(articleAgg)
                     .sort((a, b) => b[1] - a[1])
                     .map(([k, v]) => (
-                      <div key={k} style={chipBase}>
-                        {k}{chipNumBlue(v)}
+                      <div key={k} className="cmp-chip">
+                        {k}<span className="cmp-chip-num-blue">{v}</span>
                       </div>
-                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                    )) : <span className="cmp-chip-empty">无</span>}
                 </div>
               </div>
-              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>❌ 错误选项</span>
+              <div className="cmp-chip-card">
+                <div className="cmp-chip-header">
+                  <span className="cmp-chip-title">❌ 错误选项</span>
                 </div>
-                <div style={chipWrap}>
+                <div className="cmp-chip-wrap">
                   {Object.entries(errorAgg).length ? Object.entries(errorAgg)
                     .sort((a, b) => b[1] - a[1])
                     .map(([k, v]) => (
-                      <div key={k} style={chipBase}>
-                        {k}{chipNumRed(v)}
-                        <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
-                        <span style={{ color: "#64748B", fontWeight: 500 }}>次</span>
+                      <div key={k} className="cmp-chip">
+                        {k}<span className="cmp-chip-num-red">{v}</span>
+                        <span className="cmp-chip-unit">次</span>
                       </div>
-                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                    )) : <span className="cmp-chip-empty">无</span>}
                 </div>
               </div>
-              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📚 题目类型</span>
+              <div className="cmp-chip-card">
+                <div className="cmp-chip-header">
+                  <span className="cmp-chip-title">📚 题目类型</span>
                 </div>
-                <div style={chipWrap}>
+                <div className="cmp-chip-wrap">
                   {Object.entries(qtAgg).length ? Object.entries(qtAgg)
                     .sort((a, b) => b[1] - a[1])
                     .map(([k, v]) => (
-                      <div key={k} style={chipBase}>
-                        {k}{chipNumBlue(v)}
+                      <div key={k} className="cmp-chip">
+                        {k}<span className="cmp-chip-num-blue">{v}</span>
                       </div>
-                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                    )) : <span className="cmp-chip-empty">无</span>}
                 </div>
               </div>
             </>
@@ -1359,7 +1438,7 @@ const App: React.FC = () => {
         })}
 
         {renderModuleCard("🔤 词组对比", "wordpair", () => {
-          const pairMap: Record<string, { selectedWord: string; count: number }> = {};
+          const pairMap: Record<string, { selectedWord: string; count: number; }> = {};
           allData.forEach((d) => {
             d.speech?.wordPairs?.forEach((wp) => {
               if (wp.selectedWord) {
@@ -1372,24 +1451,19 @@ const App: React.FC = () => {
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
           return (
-            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>🔤 高频选词</span>
-                <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#64748B", background: "#EEF2F7", borderRadius: 999 }}>TOP 10</span>
+            <div className="cmp-chip-card">
+              <div className="cmp-chip-header">
+                <span className="cmp-chip-title">🔤 高频选词</span>
+                <span className="cmp-chip-tag cmp-chip-tag-gray">TOP 10</span>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <div className="cmp-chip-wrap">
                 {list.length ? list.map((x) => (
-                  <div key={x.selectedWord} style={{
-                    display: "inline-flex", alignItems: "center",
-                    background: "#ffffff", border: "1px solid #E0E7F1",
-                    borderRadius: 10, padding: "6px 16px",
-                    fontSize: 14, color: "#1E293B", fontWeight: 700
-                  }}>
-                    {x.selectedWord}<span style={{ fontSize: 18, fontWeight: 800, color: "#165DFF", marginLeft: 6 }}>{x.count}</span>
-                    <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
-                    <span style={{ color: "#64748B", fontWeight: 500 }}>次</span>
+                  <div key={x.selectedWord} className="cmp-chip">
+                    {x.selectedWord}<span className="cmp-chip-num-blue">{x.count}</span>
+
+                    <span className="cmp-chip-unit">次</span>
                   </div>
-                )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                )) : <span className="cmp-chip-empty">无</span>}
               </div>
             </div>
           );
@@ -1409,42 +1483,35 @@ const App: React.FC = () => {
             });
           });
           const total = Object.values(agg).reduce((s, v) => s + v, 0);
-          const chipWrap: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, padding: "4px 0 8px 0" };
-          const chipBase: React.CSSProperties = {
-            display: "inline-flex", alignItems: "center",
-            background: "#ffffff", border: "1px solid #E0E7F1",
-            borderRadius: 10, padding: "6px 16px",
-            fontSize: 14, color: "#1E293B", fontWeight: 700
-          };
           return (
             <>
-              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>⚠️ 错因</span>
-                  <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#DC2626", background: "#FEF2F2", borderRadius: 999 }}>总计 {total}</span>
+              <div className="cmp-chip-card">
+                <div className="cmp-chip-header">
+                  <span className="cmp-chip-title">⚠️ 错因</span>
+                  <span className="cmp-chip-tag cmp-chip-tag-red">总计 {total}</span>
                 </div>
-                <div style={chipWrap}>
+                <div className="cmp-chip-wrap">
                   {Object.entries(agg).length ? Object.entries(agg)
                     .sort((a, b) => b[1] - a[1])
                     .map(([k, v]) => (
-                      <div key={k} style={chipBase}>
-                        {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{v}</span>
+                      <div key={k} className="cmp-chip">
+                        {k}<span className="cmp-chip-num-red">{v}</span>
                       </div>
-                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                    )) : <span className="cmp-chip-empty">无</span>}
                 </div>
               </div>
-              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📚 题目类型</span>
+              <div className="cmp-chip-card">
+                <div className="cmp-chip-header">
+                  <span className="cmp-chip-title">📚 题目类型</span>
                 </div>
-                <div style={chipWrap}>
+                <div className="cmp-chip-wrap">
                   {Object.entries(qtAgg).length ? Object.entries(qtAgg)
                     .sort((a, b) => b[1] - a[1])
                     .map(([k, v]) => (
-                      <div key={k} style={chipBase}>
-                        {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#165DFF", marginLeft: 6 }}>{v}</span>
+                      <div key={k} className="cmp-chip">
+                        {k}<span className="cmp-chip-num-blue">{v}</span>
                       </div>
-                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                    )) : <span className="cmp-chip-empty">无</span>}
                 </div>
               </div>
             </>
@@ -1452,7 +1519,7 @@ const App: React.FC = () => {
         })}
 
         {renderModuleCard("🎨 图推", "figure", () => {
-          const agg: Record<string, { type: string; count: number }> = {};
+          const agg: Record<string, { type: string; count: number; }> = {};
           allData.forEach((d) => {
             [...(d.figure?.newPatterns || []), ...(d.figure?.errorPatterns || [])].forEach((p) => {
               if (p.value?.trim()) {
@@ -1462,39 +1529,24 @@ const App: React.FC = () => {
             });
           });
           return (
-            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>🎨 规律</span>
-                <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#7C3AED", background: "#F5F3FF", borderRadius: 999 }}>TOP 5</span>
+            <div className="cmp-chip-card">
+              <div className="cmp-chip-header">
+                <span className="cmp-chip-title">🎨 规律</span>
+                <span className="cmp-chip-tag cmp-chip-tag-purple">TOP 5</span>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <div className="cmp-chip-wrap">
                 {Object.entries(agg).length ? Object.entries(agg)
                   .sort((a, b) => b[1].count - a[1].count)
                   .slice(0, 5)
                   .map(([k, v]) => {
                     const isNew = v.type === "新规律";
                     return (
-                      <div key={k} style={{
-                        display: "inline-flex", alignItems: "center",
-                        background: "#ffffff",
-                        border: `1px solid ${isNew ? "#BBF7D0" : "#FECACA"}`,
-                        borderRadius: 10, padding: "6px 16px",
-                        fontSize: 14, color: "#1E293B", fontWeight: 700
-                      }}>
-                        <span style={{
-                          display: "inline-block",
-                          fontSize: 11,
-                          padding: "2px 8px",
-                          borderRadius: 6,
-                          marginRight: 8,
-                          fontWeight: 700,
-                          background: isNew ? "#DCFCE7" : "#FEE2E2",
-                          color: isNew ? "#15803D" : "#B91C1C"
-                        }}>{v.type}</span>
-                        {k}<span style={{ fontSize: 18, fontWeight: 800, color: isNew ? "#22C55E" : "#EF4444", marginLeft: 6 }}>{v.count}</span>
+                      <div key={k} className={`cmp-chip ${isNew ? "cmp-chip-green" : "cmp-chip-red-pattern"}`}>
+                        <span className={`cmp-badge ${isNew ? "cmp-badge-new" : "cmp-badge-err"}`}>{v.type}</span>
+                        {k}<span className={isNew ? "cmp-chip-num-green" : "cmp-chip-num-red"}>{v.count}</span>
                       </div>
                     );
-                  }) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                  }) : <span className="cmp-chip-empty">无</span>}
               </div>
             </div>
           );
@@ -1508,25 +1560,20 @@ const App: React.FC = () => {
             });
           });
           return (
-            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>❌ 错误类型</span>
+            <div className="cmp-chip-card">
+              <div className="cmp-chip-header">
+                <span className="cmp-chip-title">错误类型</span>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <div className="cmp-chip-wrap">
                 {Object.entries(agg).length ? Object.entries(agg)
                   .sort((a, b) => b[1] - a[1])
                   .map(([k, v]) => (
-                    <div key={k} style={{
-                      display: "inline-flex", alignItems: "center",
-                      background: "#ffffff", border: "1px solid #E0E7F1",
-                      borderRadius: 10, padding: "6px 16px",
-                      fontSize: 14, color: "#1E293B", fontWeight: 700
-                    }}>
-                      {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{v}</span>
-                      <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
-                      <span style={{ color: "#64748B", fontWeight: 500 }}>题</span>
+                    <div key={k} className="cmp-chip">
+                      {k}<span className="cmp-chip-num-red">{v}</span>
+
+                      <span className="cmp-chip-unit">题</span>
                     </div>
-                  )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                  )) : <span className="cmp-chip-empty">无</span>}
               </div>
             </div>
           );
@@ -1540,23 +1587,18 @@ const App: React.FC = () => {
             });
           });
           return (
-            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>⚠️ 错因</span>
+            <div className="cmp-chip-card">
+              <div className="cmp-chip-header">
+                <span className="cmp-chip-title">⚠️ 错因</span>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <div className="cmp-chip-wrap">
                 {Object.entries(agg).length ? Object.entries(agg)
                   .sort((a, b) => b[1] - a[1])
                   .map(([k, v]) => (
-                    <div key={k} style={{
-                      display: "inline-flex", alignItems: "center",
-                      background: "#ffffff", border: "1px solid #E0E7F1",
-                      borderRadius: 10, padding: "6px 16px",
-                      fontSize: 14, color: "#1E293B", fontWeight: 700
-                    }}>
-                      {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{v}</span>
+                    <div key={k} className="cmp-chip">
+                      {k}<span className="cmp-chip-num-red">{v}</span>
                     </div>
-                  )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                  )) : <span className="cmp-chip-empty">无</span>}
               </div>
             </div>
           );
@@ -1578,24 +1620,18 @@ const App: React.FC = () => {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
           return (
-            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📝 漏抄词</span>
-                <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#C2410C", background: "#FFF7ED", borderRadius: 999 }}>TOP 10</span>
+            <div className="cmp-chip-card">
+              <div className="cmp-chip-header">
+                <span className="cmp-chip-title">📝 漏抄词</span>
+                <span className="cmp-chip-tag cmp-chip-tag-orange">TOP 10</span>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <div className="cmp-chip-wrap">
                 {top10.length ? top10.map(([k, v]) => (
-                  <div key={k} style={{
-                    display: "inline-flex", alignItems: "center",
-                    background: "#ffffff", border: "1px solid #FED7AA",
-                    borderRadius: 10, padding: "6px 16px",
-                    fontSize: 14, color: "#1E293B", fontWeight: 700
-                  }}>
-                    {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#FA8C16", marginLeft: 6 }}>{v}</span>
-                    <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
-                    <span style={{ color: "#64748B", fontWeight: 500 }}>次</span>
+                  <div key={k} className="cmp-chip cmp-chip-orange">
+                    {k}<span className="cmp-chip-num-orange">{v}</span>
+                    <span className="cmp-chip-unit">次</span>
                   </div>
-                )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                )) : <span className="cmp-chip-empty">无</span>}
               </div>
             </div>
           );
