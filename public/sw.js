@@ -1,5 +1,5 @@
 // 极简 sw.js，不缓存任何内容，只为了让浏览器“忘记”旧的缓存逻辑
-const CACHE_NAME = 'my-pwa-v2'; // 版本号改成和之前不同的新值
+const CACHE_NAME = 'my-pwa-v3'; // 版本号改成和之前不同的新值
 
 // 安装时什么都不存
 self.addEventListener('install', event => {
