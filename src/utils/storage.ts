@@ -77,6 +77,7 @@ export function cleanDayData(data: DayData): DayData {
   clean.logic = {
     ...clean.logic,
     papers: clean.logic.papers.filter((p) => !isPaperEmpty(p)),
+    questionTypeSkills: clean.logic.questionTypeSkills.filter((qt) => qt.skill?.trim()),
   };
 
   // 图推
@@ -102,7 +103,6 @@ export function cleanDayData(data: DayData): DayData {
     ...clean.number,
     papers: clean.number.papers.filter((p) => !isPaperEmpty(p)),
     errorTypes: clean.number.errorTypes.filter((e) => e.type?.trim()),
-    skills: clean.number.skills.filter((s) => s.description?.trim()),
   };
 
   // 申论对策
@@ -135,6 +135,7 @@ export function ensureDefaults(data: DayData): DayData {
     logic: {
       ...data.logic,
       papers: data.logic.papers?.length > 0 ? data.logic.papers : defaults.logic.papers,
+      questionTypeSkills: data.logic.questionTypeSkills?.length > 0 ? data.logic.questionTypeSkills : defaults.logic.questionTypeSkills,
     },
     figure: {
       ...data.figure,
@@ -152,7 +153,6 @@ export function ensureDefaults(data: DayData): DayData {
       ...data.number,
       papers: data.number.papers?.length > 0 ? data.number.papers : defaults.number.papers,
       errorTypes: data.number.errorTypes?.length > 0 ? data.number.errorTypes : defaults.number.errorTypes,
-      skills: data.number.skills?.length > 0 ? data.number.skills : defaults.number.skills,
     },
     essay: {
       ...data.essay,
@@ -198,7 +198,7 @@ export function getHistoricalValues(field: string): string[] {
 
 /**
  * 获取数组字段的历史去重值
- * 支持格式：figure.newPatterns.value, figure.errorPatterns.value, number.errorTypes.type, calc.errorTypes.type, number.skills.description
+ * 支持格式：figure.newPatterns.value, figure.errorPatterns.value, number.errorTypes.type, calc.errorTypes.type, logic.questionTypeSkills.questionType, speech.questionTypeSkills.questionType
  */
 export function getHistoricalArrayValues(path: string): string[] {
   const seen = new Set<string>();

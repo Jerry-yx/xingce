@@ -1,0 +1,261 @@
+{
+  "2026-08-13": {
+    "date": "2026-08-13",
+    "speech": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 30,
+          "timeUsed": 28,
+          "errorCount": 5,
+          "circleQuestions": "3,7,15",
+          "wrongQuestions": "8,12",
+          "starQuestions": "8"
+        }
+      ],
+      "articleTypes": [
+        { "id": "a1", "type": 0, "errorCount": 2, "skill": "注意首尾句" },
+        { "id": "a2", "type": 3, "errorCount": 3, "skill": "时间线梳理" }
+      ],
+      "errorTypes": { "无中生有": 2, "偷换概念": 1, "以偏概全": 1, "过度推断": 1 },
+      "wordPairs": [
+        { "id": "w1", "pairType": "signal", "signalWord": "因此", "selectedWord": "所以", "note": "因果关系" },
+        { "id": "w2", "pairType": "compare", "compareWord": "遏制", "selectedCompareWord": "抑制", "note": "程度差异" }
+      ],
+      "questionTypeSkills": [
+        { "id": "q1", "questionType": "接续题", "skill": "看空前后的逻辑词" },
+        { "id": "q2", "questionType": "细节题", "skill": "定位原文比对" }
+      ]
+    },
+    "logic": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 10,
+          "timeUsed": 12,
+          "errorCount": 3,
+          "circleQuestions": "2,5",
+          "wrongQuestions": "4,7",
+          "starQuestions": ""
+        }
+      ],
+      "errorTypes": { "因": 1, "他": 0, "无": 1, "反": 0, "范": 1, "搭": 0, "拆": 0 },
+      "hardestQuestions": "7",
+      "questionTypeSkills": [
+        { "id": "q1", "questionType": "加强削弱", "skill": "找准论点和论据" }
+      ]
+    },
+    "figure": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 10,
+          "timeUsed": 10,
+          "errorCount": 2,
+          "circleQuestions": "3",
+          "wrongQuestions": "6,9",
+          "starQuestions": "6"
+        }
+      ],
+      "newPatterns": [
+        { "id": "f1", "value": "黑白块部分数" },
+        { "id": "f2", "value": "内外交点" }
+      ],
+      "errorPatterns": [
+        { "id": "f3", "value": "对称轴方向" }
+      ]
+    },
+    "calc": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 20,
+          "timeUsed": 25,
+          "errorCount": 4,
+          "circleQuestions": "5,11",
+          "wrongQuestions": "8,14",
+          "starQuestions": "14"
+        }
+      ],
+      "errorTypes": [
+        { "id": "c1", "type": "计算错误", "errorCount": 2, "skill": "估算代替精算" },
+        { "id": "c2", "type": "读题不清", "errorCount": 2, "skill": "圈画关键数据" }
+      ],
+      "optimizations": [
+        { "id": "o1", "questionNum": "8", "originalSteps": "先算A再算B再比较", "optimizedSteps": "直接估算比例" }
+      ]
+    },
+    "number": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 10,
+          "timeUsed": 15,
+          "errorCount": 4,
+          "circleQuestions": "3",
+          "wrongQuestions": "2,5,7",
+          "starQuestions": "5",
+          "guessRightQuestions": "8"
+        }
+      ],
+      "errorTypes": [
+        { "id": "n1", "type": "方程列错", "errorCount": 2, "skill": "设未知数从问题出发" },
+        { "id": "n2", "type": "排列组合", "errorCount": 2, "skill": "先分类再分步" }
+      ]
+    },
+    "essay": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 1,
+          "timeUsed": 60,
+          "errorCount": 0,
+          "circleQuestions": "",
+          "wrongQuestions": "",
+          "starQuestions": "",
+          "overTime": "5",
+          "isOverTime": true,
+          "scoreKeywords": 3,
+          "missKeywordsCount": 2,
+          "missKeywords": "对策,落实"
+        }
+      ]
+    }
+  },
+  "2026-08-14": {
+    "date": "2026-08-14",
+    "speech": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 30,
+          "timeUsed": 26,
+          "errorCount": 4,
+          "circleQuestions": "5,12",
+          "wrongQuestions": "9,18",
+          "starQuestions": ""
+        },
+        {
+          "id": "p2",
+          "totalQuestions": 30,
+          "timeUsed": 27,
+          "errorCount": 3,
+          "circleQuestions": "2,8",
+          "wrongQuestions": "15",
+          "starQuestions": ""
+        }
+      ],
+      "articleTypes": [
+        { "id": "a1", "type": 0, "errorCount": 1, "skill": "注意首尾句" },
+        { "id": "a2", "type": 2, "errorCount": 2, "skill": "对策标志词" },
+        { "id": "a3", "type": 6, "errorCount": 1, "skill": "" }
+      ],
+      "errorTypes": { "无中生有": 1, "偷换概念": 2, "以偏概全": 0, "过度推断": 1 },
+      "wordPairs": [
+        { "id": "w1", "pairType": "signal", "signalWord": "因此", "selectedWord": "所以", "note": "因果关系" },
+        { "id": "w2", "pairType": "signal", "signalWord": "然而", "selectedWord": "但是", "note": "转折" },
+        { "id": "w3", "pairType": "compare", "compareWord": "遏制", "selectedCompareWord": "控制", "note": "搭配差异" }
+      ],
+      "questionTypeSkills": [
+        { "id": "q1", "questionType": "接续题", "skill": "看空前后的逻辑词" },
+        { "id": "q2", "questionType": "填空题", "skill": "上下文语义对应" },
+        { "id": "q3", "questionType": "语句排序题", "skill": "首句排除法" }
+      ]
+    },
+    "logic": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 10,
+          "timeUsed": 11,
+          "errorCount": 2,
+          "circleQuestions": "4",
+          "wrongQuestions": "6",
+          "starQuestions": ""
+        }
+      ],
+      "errorTypes": { "因": 0, "他": 1, "无": 0, "反": 0, "范": 0, "搭": 1, "拆": 0 },
+      "hardestQuestions": "6",
+      "questionTypeSkills": [
+        { "id": "q1", "questionType": "加强削弱", "skill": "找准论点和论据" },
+        { "id": "q2", "questionType": "前提假设", "skill": "否定代入法验证" }
+      ]
+    },
+    "figure": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 10,
+          "timeUsed": 9,
+          "errorCount": 1,
+          "circleQuestions": "5",
+          "wrongQuestions": "8",
+          "starQuestions": ""
+        }
+      ],
+      "newPatterns": [
+        { "id": "f1", "value": "黑白块部分数" },
+        { "id": "f2", "value": "笔画数" }
+      ],
+      "errorPatterns": [
+        { "id": "f3", "value": "对称轴方向" }
+      ]
+    },
+    "calc": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 20,
+          "timeUsed": 22,
+          "errorCount": 3,
+          "circleQuestions": "7",
+          "wrongQuestions": "10,16",
+          "starQuestions": ""
+        }
+      ],
+      "errorTypes": [
+        { "id": "c1", "type": "计算错误", "errorCount": 1, "skill": "估算代替精算" },
+        { "id": "c2", "type": "单位看错", "errorCount": 2, "skill": "标注单位" }
+      ],
+      "optimizations": [
+        { "id": "o1", "questionNum": "10", "originalSteps": "逐项计算再求和", "optimizedSteps": "放缩估算" }
+      ]
+    },
+    "number": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 10,
+          "timeUsed": 14,
+          "errorCount": 3,
+          "circleQuestions": "6",
+          "wrongQuestions": "3,9",
+          "starQuestions": "",
+          "guessRightQuestions": "4"
+        }
+      ],
+      "errorTypes": [
+        { "id": "n1", "type": "方程列错", "errorCount": 1, "skill": "设未知数从问题出发" },
+        { "id": "n2", "type": "赋值法", "errorCount": 2, "skill": "取特殊值验证" }
+      ]
+    },
+    "essay": {
+      "papers": [
+        {
+          "id": "p1",
+          "totalQuestions": 1,
+          "timeUsed": 55,
+          "errorCount": 0,
+          "circleQuestions": "",
+          "wrongQuestions": "",
+          "starQuestions": "",
+          "overTime": "0",
+          "isOverTime": false,
+          "scoreKeywords": 4,
+          "missKeywordsCount": 1,
+          "missKeywords": "对策"
+        }
+      ]
+    }
+  }
+}

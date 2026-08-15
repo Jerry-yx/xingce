@@ -5,8 +5,8 @@ export const ARTICLE_TYPE_MAP: Record<number, string> = {
   4: '新闻类', 5: '区别联系类', 6: '说理类', 7: '并列',
 };
 
-export const QUESTION_TYPE_MAP: Record<number, string> = {
-  1: '接续题', 2: '填空题', 3: '细节题', 4: '语句排序题',
+export const QUESTION_TYPE_MAP: Record<string, string> = {
+  '接续题': '接续题', '填空题': '填空题', '细节题': '细节题', '语句排序题': '语句排序题',
 };
 
 export const SPEECH_ERROR_KEYS = [
@@ -38,16 +38,17 @@ export const EMPTY_PAPER: Paper = {
 
 export const DEFAULT_SPEECH: SpeechModule = {
   papers: [{ ...EMPTY_PAPER, id: 'p1' }],
-  articleTypes: [{ id: 'a1', type: 0, errorCount: 0 }],
+  articleTypes: [{ id: 'a1', type: 0, errorCount: 0, skill: '' }],
   errorTypes: Object.fromEntries(SPEECH_ERROR_KEYS.map(k => [k.key, 0])),
   wordPairs: [{ id: 'w1', pairType: 'signal', signalWord: '', selectedWord: '', note: '' }],
-  questionTypeSkills: [{ id: 'q1', questionType: 1, skill: '' }],
+  questionTypeSkills: [{ id: 'q1', questionType: '接续题', skill: '' }],
 };
 
 export const DEFAULT_LOGIC: LogicModule = {
   papers: [{ ...EMPTY_PAPER, id: 'p1' }],
   errorTypes: { 因: 0, 他: 0, 无: 0, 反: 0, 范: 0, 搭: 0, 拆: 0 },
   hardestQuestions: '',
+  questionTypeSkills: [{ id: 'q1', questionType: '接续题', skill: '' }],
 };
 
 export const DEFAULT_FIGURE: FigureModule = {
@@ -58,14 +59,13 @@ export const DEFAULT_FIGURE: FigureModule = {
 
 export const DEFAULT_CALC: CalcModule = {
   papers: [{ ...EMPTY_PAPER, id: 'p1' }],
-  errorTypes: [{ id: 'c1', type: '', errorCount: 0 }],
+  errorTypes: [{ id: 'c1', type: '', errorCount: 0, skill: '' }],
   optimizations: [{ id: 'o1', questionNum: '', originalSteps: '', optimizedSteps: '' }],
 };
 
 export const DEFAULT_NUMBER: NumberModule = {
   papers: [{ ...EMPTY_PAPER, id: 'p1' }],
-  errorTypes: [{ id: 'n1', type: '', errorCount: 0 }],
-  skills: [{ id: 's1', description: '' }],
+  errorTypes: [{ id: 'n1', type: '', errorCount: 0, skill: '' }],
 };
 
 export const DEFAULT_ESSAY: EssayModule = {

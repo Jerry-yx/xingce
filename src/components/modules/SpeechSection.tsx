@@ -1,5 +1,6 @@
 import React from "react";
-import { InputNumber, Select, Input } from "antd";
+import { InputNumber, Select, Input, Button } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import { DynamicList } from "../common/DynamicList";
 import { ModuleCard, AccuracyBadge } from "../common/ModuleCard";
 import type { SpeechModule, Paper, ArticleTypeError, QuestionTypeSkill } from "../../types";
@@ -8,9 +9,10 @@ import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS, QUESTION_TYPE_MAP } from "../../ut
 interface SpeechSectionProps {
   data: SpeechModule;
   onChange: (data: SpeechModule) => void;
+  onSave?: () => void;
 }
 
-export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) => {
+export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange, onSave }) => {
   const updatePapers = (papers: Paper[]) => onChange({ ...data, papers });
   const updateArticleTypes = (articleTypes: ArticleTypeError[]) => onChange({ ...data, articleTypes });
   const updateErrorTypes = (errorTypes: Record<string, number>) => onChange({ ...data, errorTypes });
@@ -21,12 +23,21 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
       <label className="field-label">文章类型</label>
       <Select
         value={item.type}
+        style={{ flex: "1 0 100px" }}
         onChange={(v) => onUpdate({ ...item, type: v })}
-        size="small"
+        
         className="field-input"
         options={Object.entries(ARTICLE_TYPE_MAP).map(([k, v]) => ({ value: Number(k), label: v }))}
       />
-      <InputNumber value={item.errorCount} onChange={(v) => onUpdate({ ...item, errorCount: v || 0 })} min={0} size="small" style={{ width: 60 }} />
+      <InputNumber value={item.errorCount} onChange={(v) => onUpdate({ ...item, errorCount: v || 0 })} min={0}  style={{ width: 60 }} />
+      <Input
+        value={item.skill || ''}
+        onChange={(e) => onUpdate({ ...item, skill: e.target.value })}
+        placeholder="技巧"
+        
+        className="field-input"
+        style={{ flex: "1 0 40%" }}
+      />
     </div>
   );
 
@@ -36,23 +47,23 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
       <Select
         value={item.questionType}
         onChange={(v) => onUpdate({ ...item, questionType: v })}
-        size="small"
+        
         className="field-input"
-        options={Object.entries(QUESTION_TYPE_MAP).map(([k, v]) => ({ value: Number(k), label: v }))}
+        options={Object.entries(QUESTION_TYPE_MAP).map(([k, v]) => ({ value: k, label: v }))}
       />
       <Input
         value={item.skill}
         onChange={(e) => onUpdate({ ...item, skill: e.target.value })}
         placeholder="技巧"
-        size="small"
+        
         className="field-input"
-        style={{ width: 120 }}
+        style={{ flex: "1 0 40%" }}
       />
     </div>
   );
 
   return (
-    <ModuleCard title="🧠 言语理解">
+    <ModuleCard title="🧠 言语理解" headerExtra={onSave ? <Button type="text"  icon={<SaveOutlined />} onClick={onSave}>保存</Button> : undefined} collapsible defaultCollapsed={false}>
       <div className="module-layout">
         <div className="module-left">
           <h4 style={{ marginBottom: 8, color: "#1a2b4c" }}>套卷总体情况</h4>
@@ -82,6 +93,13 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                 <div className="paper-item">
                   <div className="paper-header">
                     <span className="paper-title">套卷 {i + 1}</span>
+                    <Input
+                      value={paper.name || ''}
+                      onChange={(e) => onUpdate({ ...paper, name: e.target.value })}
+                      placeholder="套卷名称"
+                      
+                      style={{ width: 140, marginLeft: 8 }}
+                    />
                     <AccuracyBadge correct={paper.totalQuestions - totalErr} total={paper.totalQuestions} />
                   </div>
                   <div className="field-grid">
@@ -91,7 +109,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.totalQuestions}
                         onChange={(v) => onUpdate({ ...paper, totalQuestions: v || 0 })}
                         min={0}
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -101,7 +119,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.timeUsed}
                         onChange={(v) => onUpdate({ ...paper, timeUsed: v || 0 })}
                         min={0}
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -115,7 +133,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.fillErrorCount}
                         onChange={(v) => onUpdate({ ...paper, fillErrorCount: v || 0 })}
                         min={0}
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -125,7 +143,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.centerErrorCount}
                         onChange={(v) => onUpdate({ ...paper, centerErrorCount: v || 0 })}
                         min={0}
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -143,7 +161,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.centerCircleQuestions}
                         onChange={(e) => onUpdate({ ...paper, centerCircleQuestions: e.target.value })}
                         placeholder="题号"
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -153,7 +171,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.fillErrorQuestions}
                         onChange={(e) => onUpdate({ ...paper, fillErrorQuestions: e.target.value })}
                         placeholder="题号"
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -163,7 +181,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                         value={paper.centerErrorQuestions}
                         onChange={(e) => onUpdate({ ...paper, centerErrorQuestions: e.target.value })}
                         placeholder="题号"
-                        size="small"
+                        
                         className="field-input"
                       />
                     </div>
@@ -198,7 +216,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                     value={data.errorTypes[k.key] || 0}
                     onChange={(v) => updateErrorTypes({ ...data.errorTypes, [k.key]: v || 0 })}
                     min={0}
-                    size="small"
+                    
                     className="field-input"
                   />
                 </div>
@@ -209,9 +227,10 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: "#4a5b79" }}>题目类型与技巧</div>
             {(() => {
               const items = data.questionTypeSkills || [];
-              const agg: Record<number, number> = {};
+              const agg: Record<string, number> = {};
               items.forEach((qt) => {
-                agg[qt.questionType] = (agg[qt.questionType] || 0) + 1;
+                const name = qt.questionType || "未知";
+                agg[name] = (agg[name] || 0) + 1;
               });
               const total = items.length;
               if (total === 0) return null;
@@ -222,7 +241,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
                     .sort((a, b) => b[1] - a[1])
                     .map(([k, v]) => (
                       <span key={k}>
-                        {QUESTION_TYPE_MAP[Number(k)] || "未知"}：{v}
+                        {QUESTION_TYPE_MAP[k] || k}：{v}
                       </span>
                     ))}
                 </div>
@@ -231,7 +250,7 @@ export const SpeechSection: React.FC<SpeechSectionProps> = ({ data, onChange }) 
             <DynamicList
               items={data.questionTypeSkills || []}
               onChange={updateQuestionTypeSkills}
-              createItem={() => ({ id: String(Date.now()), questionType: 1, skill: '' })}
+              createItem={() => ({ id: String(Date.now()), questionType: '接续题', skill: '' })}
               renderItem={renderQuestionTypeSkill}
               addLabel="添加题目类型"
               minItems={0}

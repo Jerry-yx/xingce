@@ -1,0 +1,159 @@
+{
+  "2026-08-15": {
+    "date": "2026-08-15",
+    "speech": {
+      "papers": [
+        {
+          "id": "s1",
+          "name": "2024国考真题卷",
+          "totalQuestions": 401,
+          "timeUsed": 351,
+          "errorCount": 10,
+          "circleQuestions": "12,25",
+          "wrongQuestions": "",
+          "starQuestions": "",
+          "fillErrorCount": 3,
+          "centerErrorCount": 2,
+          "fillErrorQuestions": "5,8,15",
+          "centerErrorQuestions": "22,30",
+          "centerCircleQuestions": "18,33"
+        }
+      ],
+      "articleTypes": [
+        { "id": "a1", "type": 0, "errorCount": 2, "skill": "注意首尾11" },
+        { "id": "a2", "type": 2, "errorCount": 1, "skill": "对策标志词22" },
+        { "id": "a3", "type": 3, "errorCount": 2, "skill": "时间线梳理11" },
+        { "id": "a4", "type": 3, "errorCount": 2, "skill": "时间线梳理11" }
+      ],
+      "errorTypes": {
+        "无中生有": 3,
+        "偷换概念": 2,
+        "以偏概全": 1,
+        "过度推断": 0
+      },
+      "wordPairs": [
+        { "id": "w1", "pairType": "signal", "signalWord": "因此", "selectedWord": "所以", "note": "111因果关系" },
+        { "id": "w2", "pairType": "compare", "selectedWord": "遏制", "compareWord": "抑制", "note": "11程度不同" },
+        { "id": "w3", "pairType": "signal", "signalWord": "但是", "selectedWord": "然而", "note": "111转折关系" }
+      ],
+      "questionTypeSkills": [
+        { "id": "q1", "questionType": "接续题", "skill": "111找首尾呼应" },
+        { "id": "q2", "questionType": "细节题", "skill": "111定位原文比对" },
+        { "id": "q3", "questionType": "填空题", "skill": "111前后文逻辑推断" }
+      ]
+    },
+    "logic": {
+      "papers": [
+        {
+          "id": "l1",
+          "name": "2024国考真题卷",
+          "totalQuestions": 40,
+          "timeUsed": 32,
+          "errorCount": 6,
+          "circleQuestions": "5,18,33",
+          "wrongQuestions": "5,8,12,18,25,33",
+          "starQuestions": "12,25"
+        }
+      ],
+      "errorTypes": {
+        "因": 2,
+        "他": 1,
+        "无": 2,
+        "反": 0,
+        "范": 1,
+        "搭": 0,
+        "拆": 1
+      },
+      "hardestQuestions": "18,33",
+      "questionTypeSkills": [
+        { "id": "q1", "questionType": "接续题", "skill": "111逻辑链条分析法" },
+        { "id": "q2", "questionType": "细节题", "skill": "排除法+代入验证" },
+        { "id": "q3", "questionType": "语句排序题", "skill": "首尾句+关联词定位" }
+      ]
+    },
+    "figure": {
+      "papers": [
+        {
+          "id": "f1",
+          "name": "2024国考真题卷",
+          "totalQuestions": 10,
+          "timeUsed": 8,
+          "errorCount": 2,
+          "circleQuestions": "3,7",
+          "wrongQuestions": "3,7",
+          "starQuestions": ""
+        }
+      ],
+      "newPatterns": [
+        { "id": "n1", "value": "111黑白块+旋转" },
+        { "id": "n2", "value": "立体展开图新考法" }
+      ],
+      "errorPatterns": [
+        { "id": "e1", "value": "111对称轴方向判断" },
+        { "id": "e2", "value": "笔画数漏数" }
+      ]
+    },
+    "calc": {
+      "papers": [
+        {
+          "id": "c1",
+          "name": "2024国考真题卷",
+          "totalQuestions": 20,
+          "timeUsed": 25,
+          "errorCount": 3,
+          "circleQuestions": "7,14",
+          "wrongQuestions": "7,14,18",
+          "starQuestions": ""
+        }
+      ],
+      "errorTypes": [
+        { "id": "e1", "type": "计算粗心", "errorCount": 1, "skill": "111二次验算" },
+        { "id": "e2", "type": "公式记错", "errorCount": 1, "skill": "考前默写公式" },
+        { "id": "e3", "type": "单位换算", "errorCount": 1, "skill": "读题标注单位" }
+      ],
+      "optimizations": [
+        { "id": "o1", "questionNum": "7", "originalSteps": "1115", "optimizedSteps": "1113" },
+        { "id": "o2", "questionNum": "14", "originalSteps": "4", "optimizedSteps": "2" }
+      ]
+    },
+    "number": {
+      "papers": [
+        {
+          "id": "n1",
+          "name": "2024国考真题卷",
+          "totalQuestions": 15,
+          "timeUsed": 18,
+          "errorCount": 5,
+          "circleQuestions": "3,8,11",
+          "wrongQuestions": "3,6,8,11,14",
+          "starQuestions": "6,14",
+          "guessRightQuestions": "3"
+        }
+      ],
+      "errorTypes": [
+        { "id": "e1", "type": "工程问题", "errorCount": 2, "skill": "1111设总量为1法" },
+        { "id": "e2", "type": "排列组合", "errorCount": 2, "skill": "分类讨论+排除" },
+        { "id": "e3", "type": "概率问题", "errorCount": 1, "skill": "逆向思维" }
+      ]
+    },
+    "essay": {
+      "papers": [
+        {
+          "id": "es1",
+          "name": "2024国考真题卷",
+          "totalQuestions": 0,
+          "timeUsed": 0,
+          "errorCount": 0,
+          "circleQuestions": "",
+          "wrongQuestions": "",
+          "starQuestions": "",
+          "overTime": "5",
+          "isOverTime": false,
+          "scoreKeywords": 8,
+          "missKeywordsCount": 3,
+          "missKeywords": "乡村振兴,共同富裕,基层治理，1111，444，55"
+        }
+      ]
+    }
+  }
+}

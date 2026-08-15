@@ -1,5 +1,6 @@
 import React from "react";
-import { Input, Select } from "antd";
+import { Input, Select, Button } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import { DynamicList } from "../common/DynamicList";
 import { ModuleCard } from "../common/ModuleCard";
 import type { WordPair } from "../../types";
@@ -7,9 +8,10 @@ import type { WordPair } from "../../types";
 interface WordPairSectionProps {
   wordPairs: WordPair[];
   onChange: (wordPairs: WordPair[]) => void;
+  onSave?: () => void;
 }
 
-export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onChange }) => {
+export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onChange, onSave }) => {
   const renderWordPair = (item: WordPair, _i: number, onUpdate: (item: WordPair) => void) => {
     const isSignal = item.pairType === "signal";
     return (
@@ -17,7 +19,8 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
         <Select
           value={item.pairType}
           onChange={(v) => onUpdate({ ...item, pairType: v as "signal" | "compare" })}
-          size="small"
+              style={{ flex: "1 0 100px" }}
+          
           className="wp-input-70"
           options={[
             { value: "signal", label: "信号词" },
@@ -30,7 +33,7 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
               value={item.signalWord}
               onChange={(e) => onUpdate({ ...item, signalWord: e.target.value })}
               placeholder="信号"
-              size="small"
+              style={{ flex: "1 0 100px" }}
               className="wp-input-70"
             />
             <span className="wp-sep">/</span>
@@ -38,7 +41,7 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
               value={item.selectedWord}
               onChange={(e) => onUpdate({ ...item, selectedWord: e.target.value })}
               placeholder="选词"
-              size="small"
+              style={{ flex: "1 0 100px" }}
               className="wp-input-70"
             />
             <span className="wp-sep">/</span>
@@ -49,7 +52,7 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
               value={item.selectedWord}
               onChange={(e) => onUpdate({ ...item, selectedWord: e.target.value })}
               placeholder="选词"
-              size="small"
+              style={{ flex: "1 0 100px" }}
               className="wp-input-70"
             />
             <span className="wp-sep">/</span>
@@ -57,7 +60,7 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
               value={item.compareWord}
               onChange={(e) => onUpdate({ ...item, compareWord: e.target.value })}
               placeholder="对比"
-              size="small"
+              style={{ flex: "1 0 100px" }}
               className="wp-input-70"
             />
             <span className="wp-sep">/</span>
@@ -67,7 +70,7 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
           value={item.note}
           onChange={(e) => onUpdate({ ...item, note: e.target.value })}
           placeholder={isSignal ? "词义对比重点" : "选词对比重点"}
-          size="small"
+          style={{ flex: "1 0 40%" }}
           className="wp-input-flex"
         />
       </div>
@@ -75,7 +78,7 @@ export const WordPairSection: React.FC<WordPairSectionProps> = ({ wordPairs, onC
   };
 
   return (
-    <ModuleCard title="🔤 词组对比">
+    <ModuleCard title="🔤 词组对比" headerExtra={onSave ? <Button type="text"  icon={<SaveOutlined />} onClick={onSave}>保存</Button> : undefined} collapsible defaultCollapsed>
       <div style={{ marginBottom: 8, fontSize: 12, color: "#7a8aa8" }}>
         信号词格式：选词 / 信号词 / 重点 &nbsp;&nbsp; 对比词格式：选词 / 对比词 / 重点
       </div>

@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from "react";
-import { Tabs, Button, message, Select, Modal, Card, Tag, Divider, Badge } from "antd";
-import { SaveOutlined, ExportOutlined, DownloadOutlined } from "@ant-design/icons";
+import React, { useCallback, useMemo, useRef } from "react";
+import { Tabs, Button, message, Select, Modal, Tag, Divider, Badge } from "antd";
+import { SaveOutlined, ExportOutlined, DownloadOutlined, ImportOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useAppData } from "./hooks/useAppData";
 import { SpeechSection } from "./components/modules/SpeechSection";
 import { LogicSection } from "./components/modules/LogicSection";
@@ -9,10 +9,23 @@ import { CalcSection } from "./components/modules/CalcSection";
 import { NumberSection } from "./components/modules/NumberSection";
 import { EssaySection } from "./components/modules/EssaySection";
 import { WordPairSection } from "./components/modules/WordPairSection";
-import { getAllDayData, loadDayData, formatDate } from "./utils/storage";
+import { ModuleCard } from "./components/common/ModuleCard";
+import { getAllDayData, loadDayData, formatDate, getAllSavedDates, saveDayData } from "./utils/storage";
 import { ARTICLE_TYPE_MAP, SPEECH_ERROR_KEYS, LOGIC_ERROR_KEYS, QUESTION_TYPE_MAP } from "./utils/constants";
 import type { DayData, Paper, WordPair } from "./types";
 import "./styles/app.css";
+
+function mergeListByDeepEqual<T extends { id: string }>(existing: T[], imported: T[]): T[] {
+  const result = [...existing];
+  const existingKeys = new Set(existing.map((item) => JSON.stringify({ ...item, id: undefined })));
+  imported.forEach((item) => {
+    const key = JSON.stringify({ ...item, id: undefined });
+    if (!existingKeys.has(key)) {
+      result.push(item);
+    }
+  });
+  return result;
+}
 
 const App: React.FC = () => {
   const { todayData, updateTodayData, saveToday, getAllDates, activeTab, setActiveTab, todayStr } = useAppData();
@@ -21,6 +34,9 @@ const App: React.FC = () => {
   const [historyDate, setHistoryDate] = React.useState<string>(dates[0] || "");
   const [exportVisible, setExportVisible] = React.useState(false);
   const [exportText, setExportText] = React.useState("");
+  const [importVisible, setImportVisible] = React.useState(false);
+  const [importData, setImportData] = React.useState<Record<string, DayData> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = useCallback(() => {
     saveToday();
@@ -85,7 +101,7 @@ const App: React.FC = () => {
           mod.papers.forEach((p: Paper, i: number) => {
             const correct = p.totalQuestions - p.errorCount;
             const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
-            text += `  套卷${i + 1}：正确率：${rate}% 用时：${p.timeUsed}min, 总题数：${p.totalQuestions}个 错误个数：${p.errorCount}个\n`;
+            text += `套卷${i + 1} ${p.name ? `${p.name} ` : ""}：正确率：${rate}% 用时：${p.timeUsed}min, 总题数：${p.totalQuestions}个 错误个数：${p.errorCount}个\n`;
             if (p.circleQuestions) text += `  画圈：${p.circleQuestions}\n`;
             if (p.wrongQuestions) text += `  错题：${p.wrongQuestions}\n`;
             if (p.starQuestions) text += `  ★：${p.starQuestions}\n`;
@@ -113,7 +129,7 @@ const App: React.FC = () => {
             text += "  题目类型与技巧：\n";
             d.speech.questionTypeSkills.forEach((qt) => {
               if (qt.skill?.trim()) {
-                text += `    ${QUESTION_TYPE_MAP[qt.questionType] || "未知"}：${qt.skill}\n`;
+                text += `    ${QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：${qt.skill}\n`;
               }
             });
           }
@@ -146,13 +162,151 @@ const App: React.FC = () => {
     message.success("导出成功！");
   }, [generateExport, todayStr]);
 
+  const handleExportJson = useCallback(() => {
+    const allDates = getAllSavedDates();
+    const allData: Record<string, DayData> = {};
+    allDates.forEach((date) => {
+      const data = loadDayData(date);
+      if (data) allData[date] = data;
+    });
+    const json = JSON.stringify(allData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const desc = prompt("请输入导出描述（可选）：", "数据备份");
+    const filename = desc ? `${todayStr}_${desc}.json` : `${todayStr}_数据备份.json`;
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    message.success("JSON 文件已导出");
+  }, [todayStr]);
+
+  const handleImportJson = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string) as Record<string, DayData>;
+        setImportData(data);
+        setImportVisible(true);
+      } catch {
+        message.error("JSON 格式错误，请检查文件");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }, []);
+
+  const handleConfirmImport = useCallback(() => {
+    if (!importData) return;
+    let mergedCount = 0;
+    let overwriteCount = 0;
+
+    Object.entries(importData).forEach(([date, importedDay]) => {
+      const existing = loadDayData(date);
+      if (!existing) {
+        saveDayData(importedDay);
+        overwriteCount++;
+        return;
+      }
+
+      const merged: DayData = { ...existing };
+      merged.speech = {
+        ...existing.speech,
+        papers: mergeListByDeepEqual(existing.speech.papers || [], importedDay.speech?.papers || []),
+        articleTypes: mergeListByDeepEqual(existing.speech.articleTypes || [], importedDay.speech?.articleTypes || []),
+        wordPairs: mergeListByDeepEqual(existing.speech.wordPairs || [], importedDay.speech?.wordPairs || []),
+        questionTypeSkills: mergeListByDeepEqual(existing.speech.questionTypeSkills || [], importedDay.speech?.questionTypeSkills || []),
+        errorTypes: (() => {
+          const merged = { ...existing.speech.errorTypes };
+          if (importedDay.speech?.errorTypes) {
+            Object.entries(importedDay.speech.errorTypes).forEach(([k, v]) => {
+              merged[k] = (merged[k] || 0) + v;
+            });
+          }
+          return merged;
+        })(),
+      };
+      merged.logic = {
+        ...existing.logic,
+        papers: mergeListByDeepEqual(existing.logic.papers || [], importedDay.logic?.papers || []),
+        questionTypeSkills: mergeListByDeepEqual(existing.logic.questionTypeSkills || [], importedDay.logic?.questionTypeSkills || []),
+        errorTypes: (() => {
+          const merged = { ...existing.logic.errorTypes };
+          if (importedDay.logic?.errorTypes) {
+            Object.entries(importedDay.logic.errorTypes).forEach(([k, v]) => {
+              merged[k as keyof typeof merged] = (merged[k as keyof typeof merged] || 0) + (v as number);
+            });
+          }
+          return merged;
+        })(),
+      };
+      merged.figure = {
+        ...existing.figure,
+        papers: mergeListByDeepEqual(existing.figure.papers || [], importedDay.figure?.papers || []),
+        newPatterns: mergeListByDeepEqual(existing.figure.newPatterns || [], importedDay.figure?.newPatterns || []),
+        errorPatterns: mergeListByDeepEqual(existing.figure.errorPatterns || [], importedDay.figure?.errorPatterns || []),
+      };
+      merged.calc = {
+        ...existing.calc,
+        papers: mergeListByDeepEqual(existing.calc.papers || [], importedDay.calc?.papers || []),
+        errorTypes: mergeListByDeepEqual(existing.calc.errorTypes || [], importedDay.calc?.errorTypes || []),
+        optimizations: mergeListByDeepEqual(existing.calc.optimizations || [], importedDay.calc?.optimizations || []),
+      };
+      merged.number = {
+        ...existing.number,
+        papers: mergeListByDeepEqual(existing.number.papers || [], importedDay.number?.papers || []),
+        errorTypes: mergeListByDeepEqual(existing.number.errorTypes || [], importedDay.number?.errorTypes || []),
+      };
+      merged.essay = {
+        ...existing.essay,
+        papers: (() => {
+          const existPapers = [...(existing.essay.papers || [])];
+          const importPapers = importedDay.essay?.papers || [];
+          const existKeys = existPapers.map((p) => {
+            const { id, missKeywords, missKeywordsCount, ...rest } = p;
+            return JSON.stringify(rest);
+          });
+          importPapers.forEach((imp) => {
+            const { id, missKeywords: impMiss, missKeywordsCount: _mc, ...impRest } = imp;
+            const impKey = JSON.stringify(impRest);
+            const matchIdx = existKeys.indexOf(impKey);
+            if (matchIdx >= 0) {
+              const existMiss = (existPapers[matchIdx].missKeywords || "").split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+              const importMiss = (impMiss || "").split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+              const union = [...new Set([...existMiss, ...importMiss])].join(",");
+              existPapers[matchIdx] = { ...existPapers[matchIdx], missKeywords: union, missKeywordsCount: union ? union.split(",").length : 0 };
+            } else {
+              existPapers.push(imp);
+            }
+          });
+          return existPapers;
+        })(),
+      };
+
+      saveDayData(merged);
+      mergedCount++;
+    });
+
+    setImportVisible(false);
+    setImportData(null);
+    message.success(`导入完成：覆盖 ${overwriteCount} 天，合并 ${mergedCount} 天`);
+    window.location.reload();
+  }, [importData]);
+
   // ===== 历史记录视图 =====
   const historyData = historyDate ? loadDayData(historyDate) : null;
   const renderHistory = () => {
     if (!historyData) return <div style={{ textAlign: "center", padding: 40, color: "#999" }}>请选择日期</div>;
     const d = historyData;
     const HL = { rate: "#52c41a", err: "#ff4d4f", time: "#1890ff", key: "#8a99b0" } as const;
-    const Rate = ({ r }: { r: number }) => <span style={{ color: HL.rate, fontWeight: 600 }}>{r}%</span>;
+    const Rate = ({ r }: { r: number }) => <span style={{ color: r < 70 ? "#ff4d4f" : HL.rate, fontWeight: 600 }}>{r}%</span>;
     const Err = ({ n }: { n: number }) => <span style={{ color: HL.err, fontWeight: 600 }}>{n}个</span>;
     const Time = ({ t }: { t: number }) => <span style={{ color: HL.time, fontWeight: 600 }}>{t}min</span>;
 
@@ -170,89 +324,83 @@ const App: React.FC = () => {
         {moduleConfigs.map(({ key, title }) => {
           const mod = d[key] as unknown as Record<string, unknown>;
           const papers = (mod?.papers as Paper[]) || [];
-          const hasData = papers.length > 0 || (key === "speech" && (d.speech.articleTypes?.length || d.speech.wordPairs?.length || d.speech.questionTypeSkills?.length));
+          let hasData = papers.length > 0;
+          if (key === "speech") hasData = hasData || (d.speech?.articleTypes?.length ?? 0) > 0 || (d.speech?.wordPairs?.length ?? 0) > 0 || (d.speech?.questionTypeSkills?.length ?? 0) > 0;
+          if (key === "logic") hasData = hasData || (d.logic?.questionTypeSkills?.length ?? 0) > 0;
           return (
-            <Card key={key} title={title} style={{ marginBottom: 12, borderRadius: 12 }} size="small">
+            <ModuleCard key={key} title={title} collapsible>
               {!hasData ? (
                 <span style={{ color: "#bbb" }}>(无记录)</span>
               ) : (
                 <>
                   {papers.map((p, i) => {
+                    const detailStyle = { paddingLeft: 16, fontSize: 13, lineHeight: 2.2 };
+                    const labelStyle = { fontWeight: 600, color: "#4a5b79" };
                     if (key === "speech") {
                       const totalErr = (p.fillErrorCount || 0) + (p.centerErrorCount || 0);
                       const rate = p.totalQuestions > 0 ? Math.round(((p.totalQuestions - totalErr) / p.totalQuestions) * 100) : 0;
                       return (
-                        <div key={i} className="hist-line">
-                          套卷{i + 1}：正确率：
-                          <Rate r={rate} /> 用时：
-                          <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个
-                          {p.fillErrorCount ? (
-                            <>
-                              <br />
-                              选词填空错：
-                              <Err n={p.fillErrorCount} /> 中心理解错：
-                              <Err n={p.centerErrorCount || 0} /> 总错误：
-                              <Err n={totalErr} />
-                            </>
-                          ) : null}
-                          {p.centerCircleQuestions ? (
-                            <>
-                              <br />⭕ 中心画圈：{p.centerCircleQuestions}
-                            </>
-                          ) : null}
-                          {p.fillErrorQuestions ? (
-                            <>
-                              <br />❌ 选词错题：{p.fillErrorQuestions}
-                            </>
-                          ) : null}
-                          {p.centerErrorQuestions ? (
-                            <>
-                              <br />❌ 中心错题：{p.centerErrorQuestions}
-                            </>
+                        <div key={i}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                            套卷{i + 1} {p.name || ""}
+                          </div>
+                          <div style={detailStyle}>
+                            <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                            <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                            <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                            {(p.fillErrorCount || p.centerErrorCount) ? (
+                              <span style={{ marginLeft: 12 }}>
+                                <span style={labelStyle}>选词填空错：</span><Err n={p.fillErrorCount || 0} />
+                                <span style={{ marginLeft: 8 }}><span style={labelStyle}>中心理解错：</span><Err n={p.centerErrorCount || 0} /></span>
+                                <span style={{ marginLeft: 8 }}><span style={labelStyle}>总错误：</span><Err n={totalErr} /></span>
+                              </span>
+                            ) : null}
+                          </div>
+                          {(p.centerCircleQuestions || p.fillErrorQuestions || p.centerErrorQuestions) ? (
+                            <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                              {p.centerCircleQuestions ? <span><span style={labelStyle}>⭕ 中心画圈：</span>{p.centerCircleQuestions}</span> : null}
+                              {p.fillErrorQuestions ? <span><span style={labelStyle}>❌ 选词错题：</span>{p.fillErrorQuestions}</span> : null}
+                              {p.centerErrorQuestions ? <span><span style={labelStyle}>❌ 中心错题：</span>{p.centerErrorQuestions}</span> : null}
+                            </div>
                           ) : null}
                         </div>
                       );
                     }
                     if (key === "essay") {
                       return (
-                        <div key={i} className="hist-line">
-                          套卷{i + 1}：{p.isOverTime ? "未超时" : p.overTime ? `超时${p.overTime}min` : ""}
-                          {p.scoreKeywords ? ` 得分词${p.scoreKeywords}个` : ""}
-                          {p.missKeywordsCount ? ` 漏抄${p.missKeywordsCount}个` : ""}
-                          {p.missKeywords ? (
-                            <>
-                              <br />
-                              漏抄词：{p.missKeywords}
-                            </>
-                          ) : null}
+                        <div key={i}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                            套卷{i + 1} {p.name || ""}
+                          </div>
+                          <div style={detailStyle}>
+                            {p.isOverTime ? <span style={{ color: "#52c41a", fontWeight: 600 }}>未超时</span> : p.overTime ? <span style={{ color: "#ff4d4f", fontWeight: 600 }}>超时{p.overTime}min</span> : null}
+                            {p.scoreKeywords ? <span style={{ marginLeft: 12 }}><span style={labelStyle}>得分词：</span><span style={{ color: "#52c41a", fontWeight: 600 }}>{p.scoreKeywords}个</span></span> : null}
+                            {p.missKeywordsCount ? <span style={{ marginLeft: 12 }}><span style={labelStyle}>漏抄：</span><span style={{ color: "#ff4d4f", fontWeight: 600 }}>{p.missKeywordsCount}个</span></span> : null}
+                          </div>
+                          {p.missKeywords ? <div style={detailStyle}><span style={labelStyle}>漏抄词：</span>{p.missKeywords}</div> : null}
                         </div>
                       );
                     }
                     const correct = p.totalQuestions - p.errorCount;
                     const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
                     return (
-                      <div key={i} className="hist-line">
-                        套卷{i + 1}：正确率：
-                        <Rate r={rate} /> 用时：
-                        <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个 错误个数：
-                        <Err n={p.errorCount} />
-                        {p.circleQuestions ? <>⭕ 画圈：{p.circleQuestions}</> : null}
-                        {p.wrongQuestions ? (
-                          <>
-                            <br />❌ 错题：{p.wrongQuestions}
-                          </>
-                        ) : null}
-                        {p.starQuestions ? (
-                          <>
-                            <br />
-                            ★：{p.starQuestions}
-                          </>
-                        ) : null}
-                        {key === "number" && p.guessRightQuestions ? (
-                          <>
-                            <br />
-                            蒙对：{p.guessRightQuestions}
-                          </>
+                      <div key={i}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                          套卷{i + 1} {p.name || ""}
+                        </div>
+                        <div style={detailStyle}>
+                          <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                          <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                          <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                          <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                        </div>
+                        {(p.circleQuestions || p.wrongQuestions || p.starQuestions || (key === "number" && p.guessRightQuestions)) ? (
+                          <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                            {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                            {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                            {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                            {key === "number" && p.guessRightQuestions ? <span><span style={labelStyle}>蒙对：</span>{p.guessRightQuestions}</span> : null}
+                          </div>
                         ) : null}
                       </div>
                     );
@@ -261,28 +409,29 @@ const App: React.FC = () => {
                   {key === "speech" && d.speech && (
                     <>
                       {d.speech.articleTypes?.length ? (
-                        <div className="hist-line">
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>文章类型错误：</span>
                           {d.speech.articleTypes.map((a, idx) => (
                             <span key={idx} style={{ marginRight: 12 }}>
-                              {ARTICLE_TYPE_MAP[a.type] || "未知"}错误：
-                              <Err n={a.errorCount} />
+                              {ARTICLE_TYPE_MAP[a.type] || "未知"}：<Err n={a.errorCount} />
+                              {a.skill?.trim() ? <> | 技巧：{a.skill}</> : null}
                             </span>
                           ))}
                         </div>
                       ) : null}
                       {SPEECH_ERROR_KEYS.some((k) => (d.speech.errorTypes?.[k.key] || 0) > 0) ? (
-                        <div className="hist-line">
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错误选项：</span>
                           {SPEECH_ERROR_KEYS.filter((k) => (d.speech.errorTypes?.[k.key] || 0) > 0).map((k) => (
                             <span key={k.key} style={{ marginRight: 12 }}>
-                              {k.label}
-                              <Err n={d.speech.errorTypes[k.key] || 0} />
+                              {k.label}：<Err n={d.speech.errorTypes[k.key] || 0} />
                             </span>
                           ))}
                         </div>
                       ) : null}
                       {d.speech.wordPairs?.filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean)).length ? (
-                        <div className="hist-line">
-                          <span style={{ color: HL.key }}>词组对比：</span>
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>词组对比：</span>
                           {d.speech.wordPairs
                             .filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean))
                             .map((wp, idx) => (
@@ -293,13 +442,13 @@ const App: React.FC = () => {
                         </div>
                       ) : null}
                       {d.speech.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
-                        <div className="hist-line">
-                          <span style={{ color: HL.key }}>题目类型与技巧：</span>
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>题目类型与技巧：</span>
                           {d.speech.questionTypeSkills
                             .filter((qt) => qt.skill?.trim())
                             .map((qt, idx) => (
                               <div key={idx} style={{ marginLeft: 12 }}>
-                                {QUESTION_TYPE_MAP[qt.questionType] || "未知"}：{qt.skill}
+                                {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
                               </div>
                             ))}
                         </div>
@@ -310,24 +459,36 @@ const App: React.FC = () => {
                   {key === "logic" && d.logic && (
                     <>
                       {LOGIC_ERROR_KEYS.some((k) => (d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0) > 0) ? (
-                        <div className="hist-line">
-                          <span style={{ color: HL.key }}>错因：</span>
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错因：</span>
                           {LOGIC_ERROR_KEYS.filter((k) => (d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0) > 0).map((k) => (
                             <span key={k.key} style={{ marginRight: 12 }}>
-                              {k.key}({k.label})<Err n={d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0} />
+                              {k.key}({k.label})：<Err n={d.logic.errorTypes[k.key as keyof typeof d.logic.errorTypes] || 0} />
                             </span>
                           ))}
                         </div>
                       ) : null}
-                      {d.logic.hardestQuestions ? <div className="hist-line">🎯 最难追及：{d.logic.hardestQuestions}</div> : null}
+                      {d.logic.hardestQuestions ? <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}><span style={{ fontWeight: 600, color: "#4a5b79" }}>🎯 最难追及：</span>{d.logic.hardestQuestions}</div> : null}
+                      {d.logic.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>题目类型与技巧：</span>
+                          {d.logic.questionTypeSkills
+                            .filter((qt) => qt.skill?.trim())
+                            .map((qt, idx) => (
+                              <div key={idx} style={{ marginLeft: 12 }}>
+                                {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
+                              </div>
+                            ))}
+                        </div>
+                      ) : null}
                     </>
                   )}
                   {/* 图推特有 */}
                   {key === "figure" && d.figure && (
                     <>
                       {d.figure.newPatterns?.filter((p) => p.value?.trim()).length ? (
-                        <div className="hist-line">
-                          新规律：
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>新规律：</span>
                           {d.figure.newPatterns
                             .filter((p) => p.value?.trim())
                             .map((p) => p.value)
@@ -335,8 +496,8 @@ const App: React.FC = () => {
                         </div>
                       ) : null}
                       {d.figure.errorPatterns?.filter((p) => p.value?.trim()).length ? (
-                        <div className="hist-line">
-                          错误规律：
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错误规律：</span>
                           {d.figure.errorPatterns
                             .filter((p) => p.value?.trim())
                             .map((p) => p.value)
@@ -349,17 +510,17 @@ const App: React.FC = () => {
                   {key === "calc" && d.calc && (
                     <>
                       {d.calc.errorTypes?.filter((e) => e.type?.trim()).length ? (
-                        <div className="hist-line">
-                          错误类型：
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错误类型：</span>
                           {d.calc.errorTypes
                             .filter((e) => e.type?.trim())
-                            .map((e) => `${e.type}:${e.errorCount}题`)
+                            .map((e) => `${e.type}:${e.errorCount}题${e.skill?.trim() ? ` (${e.skill})` : ""}`)
                             .join("  ")}
                         </div>
                       ) : null}
                       {d.calc.optimizations?.filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps).length ? (
-                        <div className="hist-line">
-                          <span style={{ color: HL.key }}>计算优化：</span>
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>计算优化：</span>
                           {d.calc.optimizations
                             .filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps)
                             .map((o, idx) => (
@@ -375,31 +536,19 @@ const App: React.FC = () => {
                   {key === "number" && d.number && (
                     <>
                       {d.number.errorTypes?.filter((e) => e.type?.trim()).length ? (
-                        <div className="hist-line">
-                          错因：
+                        <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                          <span style={{ fontWeight: 600, color: "#4a5b79" }}>错因：</span>
                           {d.number.errorTypes
                             .filter((e) => e.type?.trim())
-                            .map((e) => `${e.type}:${e.errorCount}`)
+                            .map((e) => `${e.type}:${e.errorCount}${e.skill?.trim() ? ` (${e.skill})` : ""}`)
                             .join("  ")}
-                        </div>
-                      ) : null}
-                      {d.number.skills?.filter((s) => s.description?.trim()).length ? (
-                        <div className="hist-line">
-                          <span style={{ color: HL.key }}>技巧：</span>
-                          {d.number.skills
-                            .filter((s) => s.description?.trim())
-                            .map((s, idx) => (
-                              <div key={idx} style={{ marginLeft: 12 }}>
-                                {s.description}
-                              </div>
-                            ))}
                         </div>
                       ) : null}
                     </>
                   )}
                 </>
               )}
-            </Card>
+            </ModuleCard>
           );
         })}
       </div>
@@ -453,9 +602,9 @@ const App: React.FC = () => {
           allOptimizations.push({ date: d.date, content: `题${o.questionNum || "?"}:${o.originalSteps || "?"}→${o.optimizedSteps || "?"}` });
         }
       });
-      // 技巧
-      d.number?.skills?.forEach((s) => {
-        if (s.description) allSkills.push({ date: d.date, content: s.description });
+      // 数量技巧
+      d.number?.errorTypes?.forEach((e) => {
+        if (e.skill?.trim()) allSkills.push({ date: d.date, content: `${e.type || "未知"}: ${e.skill}` });
       });
       // 图推规律
       [...(d.figure?.newPatterns || []), ...(d.figure?.errorPatterns || [])].forEach((p) => {
@@ -476,7 +625,7 @@ const App: React.FC = () => {
     }
 
     // 题目类型与技巧汇总
-    const qtSkillMap: Record<string, { questionType: number; skills: string[]; dates: string[] }> = {};
+    const qtSkillMap: Record<string, { questionType: string; skills: string[]; dates: string[] }> = {};
     allData.forEach((d) => {
       d.speech?.questionTypeSkills?.forEach((qt) => {
         if (!qt.skill?.trim()) return;
@@ -491,7 +640,7 @@ const App: React.FC = () => {
     // const qtSkillList = Object.values(qtSkillMap).sort((a, b) => b.dates.length - a.dates.length);
 
     // 题目类型聚合：按类型分组，收集所有技巧
-    const qtGrouped: Record<number, { skills: Set<string>; dates: Set<string> }> = {};
+    const qtGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
     allData.forEach((d) => {
       d.speech?.questionTypeSkills?.forEach((qt) => {
         if (!qt.skill?.trim()) return;
@@ -504,10 +653,69 @@ const App: React.FC = () => {
     });
     const qtGroupedList = Object.entries(qtGrouped)
       .map(([type, v]) => ({
-        questionType: Number(type),
+        questionType: type,
         skills: Array.from(v.skills),
         dayCount: v.dates.size,
       }))
+      .sort((a, b) => b.dayCount - a.dayCount);
+
+    // 言语文章类型技巧聚合
+    const articleSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    allData.forEach((d) => {
+      d.speech?.articleTypes?.forEach((a) => {
+        if (!a.skill?.trim()) return;
+        const name = ARTICLE_TYPE_MAP[a.type] || "未知";
+        if (!articleSkillGrouped[name]) articleSkillGrouped[name] = { skills: new Set(), dates: new Set() };
+        articleSkillGrouped[name].skills.add(a.skill.trim());
+        articleSkillGrouped[name].dates.add(d.date);
+      });
+    });
+    const articleSkillList = Object.entries(articleSkillGrouped)
+      .map(([type, v]) => ({ type, skills: Array.from(v.skills), dayCount: v.dates.size }))
+      .sort((a, b) => b.dayCount - a.dayCount);
+
+    // 判断技巧聚合
+    const logicSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    allData.forEach((d) => {
+      d.logic?.questionTypeSkills?.forEach((qt) => {
+        if (!qt.skill?.trim()) return;
+        if (!logicSkillGrouped[qt.questionType]) logicSkillGrouped[qt.questionType] = { skills: new Set(), dates: new Set() };
+        logicSkillGrouped[qt.questionType].skills.add(qt.skill.trim());
+        logicSkillGrouped[qt.questionType].dates.add(d.date);
+      });
+    });
+    const logicSkillList = Object.entries(logicSkillGrouped)
+      .map(([type, v]) => ({ questionType: type, skills: Array.from(v.skills), dayCount: v.dates.size }))
+      .sort((a, b) => b.dayCount - a.dayCount);
+
+    // 资料分析技巧聚合
+    const calcSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    allData.forEach((d) => {
+      d.calc?.errorTypes?.forEach((e) => {
+        if (!e.skill?.trim()) return;
+        const name = e.type || "未知";
+        if (!calcSkillGrouped[name]) calcSkillGrouped[name] = { skills: new Set(), dates: new Set() };
+        calcSkillGrouped[name].skills.add(e.skill.trim());
+        calcSkillGrouped[name].dates.add(d.date);
+      });
+    });
+    const calcSkillList = Object.entries(calcSkillGrouped)
+      .map(([type, v]) => ({ type, skills: Array.from(v.skills), dayCount: v.dates.size }))
+      .sort((a, b) => b.dayCount - a.dayCount);
+
+    // 数量关系技巧聚合
+    const numSkillGrouped: Record<string, { skills: Set<string>; dates: Set<string> }> = {};
+    allData.forEach((d) => {
+      d.number?.errorTypes?.forEach((e) => {
+        if (!e.skill?.trim()) return;
+        const name = e.type || "未知";
+        if (!numSkillGrouped[name]) numSkillGrouped[name] = { skills: new Set(), dates: new Set() };
+        numSkillGrouped[name].skills.add(e.skill.trim());
+        numSkillGrouped[name].dates.add(d.date);
+      });
+    });
+    const numSkillList = Object.entries(numSkillGrouped)
+      .map(([type, v]) => ({ type, skills: Array.from(v.skills), dayCount: v.dates.size }))
       .sort((a, b) => b.dayCount - a.dayCount);
 
     // const totalReg = pairList.reduce((s, p) => s + p.dates.length, 0);
@@ -518,9 +726,10 @@ const App: React.FC = () => {
 
     return (
       <div>
-        <Card
-          title={<span>🔤 词对分析</span>}
-          extra={
+        <ModuleCard
+          title="🔤 词对分析"
+          collapsible
+          headerExtra={
             <Button
               size="small"
               type={pairSort === "count" ? "primary" : "default"}
@@ -529,21 +738,19 @@ const App: React.FC = () => {
               {pairSort === "count" ? "按数量排序" : "按时间排序"}
             </Button>
           }
-          className="summary-card"
-          size="small"
         >
           {pairList.map((p, i) => {
-            // selectedWord相同的累计次数
-            const swCount = p.selectedWord ? pairList.filter((x) => x.selectedWord === p.selectedWord).length : 0;
+            // selectedWord相同的累计总次数（跨所有词对、所有天）
+            const swCount = p.selectedWord ? pairList.filter((x) => x.selectedWord === p.selectedWord).reduce((s, x) => s + x.dates.length, 0) : 0;
             return (
               <div className="summary-row" key={i}>
                 <span>
                   {formatDate(p.dates[0])}
-                  {p.dates.length > 1 && (
+                  {/* {p.dates.length > 1 && (
                     <Tag color="blue" style={{ marginLeft: 6 }}>
                       +{p.dates.length - 1}天
                     </Tag>
-                  )}
+                  )} */}
                   <span style={{ marginLeft: 8, display: "inline-flex", alignItems: "center" }}>
                     {p.selectedWord ? (
                       <Badge count={swCount > 1 ? swCount : 0} size="small" offset={[4, -4]}>
@@ -563,15 +770,15 @@ const App: React.FC = () => {
             );
           })}
           {!pairList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
-        </Card>
-        <Card title="📋 言语技巧" className="summary-card" size="small">
+        </ModuleCard>
+        <ModuleCard title="📋 言语技巧" collapsible>
           {qtGroupedList.map((g, i) => (
             <div className="summary-row" key={i} style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontWeight: 600, color: "#1a2b4c" }}>
-                  {QUESTION_TYPE_MAP[g.questionType] || "未知"}
+                  {QUESTION_TYPE_MAP[g.questionType] || g.questionType}
                 </span>
-                <Tag color="blue">{g.dayCount}天</Tag>
+                {/* <Tag color="blue">{g.dayCount}天</Tag> */}
                 <Tag color="green">{g.skills.length}条技巧</Tag>
               </div>
               <div style={{ fontSize: 12, color: "#4a5b79", paddingLeft: 4 }}>
@@ -584,8 +791,44 @@ const App: React.FC = () => {
             </div>
           ))}
           {!qtGroupedList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
-        </Card>
-        <Card title="📌 申论漏抄词" className="summary-card" size="small">
+        </ModuleCard>
+        <ModuleCard title="📋 言语文章类型技巧" collapsible>
+          {articleSkillList.map((g, i) => (
+            <div className="summary-row" key={i} style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 600, color: "#1a2b4c" }}>{g.type}</span>
+                {/* <Tag color="blue">{g.dayCount}天</Tag> */}
+                <Tag color="green">{g.skills.length}条技巧</Tag>
+              </div>
+              <div style={{ fontSize: 12, color: "#4a5b79", paddingLeft: 4 }}>
+                {g.skills.map((s, i) => (
+                  <Tag key={i} style={{ margin: "0 4px 4px 0" }}>{s}</Tag>
+                ))}
+              </div>
+            </div>
+          ))}
+          {!articleSkillList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
+        </ModuleCard>
+        <ModuleCard title="🧩 判断技巧" collapsible>
+          {logicSkillList.map((g, i) => (
+            <div className="summary-row" key={i} style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 600, color: "#1a2b4c" }}>
+                  {QUESTION_TYPE_MAP[g.questionType] || g.questionType}
+                </span>
+                {/* <Tag color="blue">{g.dayCount}天</Tag> */}
+                <Tag color="green">{g.skills.length}条技巧</Tag>
+              </div>
+              <div style={{ fontSize: 12, color: "#4a5b79", paddingLeft: 4 }}>
+                {g.skills.map((s, i) => (
+                  <Tag key={i} style={{ margin: "0 4px 4px 0" }}>{s}</Tag>
+                ))}
+              </div>
+            </div>
+          ))}
+          {!logicSkillList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
+        </ModuleCard>
+        <ModuleCard title="📌 申论漏抄词" collapsible>
           {missWordList.length > 0 ? (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {missWordList.map((w, i) => (
@@ -597,26 +840,56 @@ const App: React.FC = () => {
           ) : (
             <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>
           )}
-        </Card>
-        <Card title="⚙️ 资料计算优化" className="summary-card" size="small">
-          {allOptimizations.map((o, i) => (
-            <div className="summary-row" key={i}>
-              <span>{formatDate(o.date)}</span>
-              <span>{o.content}</span>
+        </ModuleCard>
+        <ModuleCard title="📊 资料分析" collapsible>
+          {calcSkillList.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: "#4a5b79" }}>技巧</div>
+              {calcSkillList.map((g, i) => (
+                <div className="summary-row" key={i} style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontWeight: 600, color: "#1a2b4c" }}>{g.type}</span>
+                    <Tag color="green">{g.skills.length}条技巧</Tag>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#4a5b79", paddingLeft: 4 }}>
+                    {g.skills.map((s, i) => (
+                      <Tag key={i} style={{ margin: "0 4px 4px 0" }}>{s}</Tag>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {allOptimizations.length > 0 && (
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: "#4a5b79" }}>计算优化</div>
+              {allOptimizations.map((o, i) => (
+                <div className="summary-row" key={i}>
+                  <span>{formatDate(o.date)}</span>
+                  <span>{o.content}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {!calcSkillList.length && !allOptimizations.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
+        </ModuleCard>
+        <ModuleCard title="💡 数量关系技巧" collapsible>
+          {numSkillList.map((g, i) => (
+            <div className="summary-row" key={i} style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 600, color: "#1a2b4c" }}>{g.type}</span>
+                <Tag color="green">{g.skills.length}条技巧</Tag>
+              </div>
+              <div style={{ fontSize: 12, color: "#4a5b79", paddingLeft: 4 }}>
+                {g.skills.map((s, i) => (
+                  <Tag key={i} style={{ margin: "0 4px 4px 0" }}>{s}</Tag>
+                ))}
+              </div>
             </div>
           ))}
-          {!allOptimizations.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
-        </Card>
-        <Card title="💡 数量技巧" className="summary-card" size="small">
-          {allSkills.map((s, i) => (
-            <div className="summary-row" key={i}>
-              <span>{formatDate(s.date)}</span>
-              <span>{s.content}</span>
-            </div>
-          ))}
-          {!allSkills.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
-        </Card>
-        <Card title="🎨 图推规律" className="summary-card" size="small">
+          {!numSkillList.length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
+        </ModuleCard>
+        <ModuleCard title="🎨 图推规律" collapsible>
           {Object.entries(allFigurePatterns)
             .sort((a, b) => b[1].count - a[1].count)
             .map(([k, v], i) => (
@@ -629,20 +902,43 @@ const App: React.FC = () => {
               </div>
             ))}
           {!Object.keys(allFigurePatterns).length && <div style={{ color: "#999", textAlign: "center" }}>暂无数据</div>}
-        </Card>
+        </ModuleCard>
       </div>
     );
   };
 
   // ===== 模块对比视图 =====
-  const renderCompare = () => {
-    const allData = getAllDayData();
-    const HL = { rate: "#52c41a", err: "#ff4d4f", time: "#1890ff", key: "#8a99b0" } as const;
-    const Rate = ({ r }: { r: number }) => <span style={{ color: HL.rate, fontWeight: 600 }}>{r}%</span>;
-    const Err = ({ n }: { n: number }) => <span style={{ color: HL.err, fontWeight: 600 }}>{n}个</span>;
-    const Time = ({ t }: { t: number }) => <span style={{ color: HL.time, fontWeight: 600 }}>{t}min</span>;
+  const renderCompare = (externalData?: DayData[]) => {
+    const allData = externalData || getAllDayData();
+    // 仅改 Rate / Err / Time 三个数字样式（字号、字重、颜色），不改变任何文字结构
+    const Rate = ({ r }: { r: number }) => (
+      <span style={{
+        fontSize: 22,
+        fontWeight: 800,
+        color: r < 70 ? "#EF4444" : "#22C55E",
+        letterSpacing: 0.3
+      }}>{r}<span style={{ fontSize: 13, fontWeight: 700 }}>%</span></span>
+    );
+    const Err = ({ n }: { n: number }) => (
+      <span style={{
+        fontSize: 22,
+        fontWeight: 800,
+        color: "#EF4444",
+        letterSpacing: 0.3
+      }}>{n}<span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>个</span></span>
+    );
+    const Time = ({ t }: { t: number }) => (
+      <span style={{
+        fontSize: 22,
+        fontWeight: 800,
+        color: "#165DFF",
+        letterSpacing: 0.3
+      }}>{t}<span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>min</span></span>
+    );
 
     const renderDayDetail = (d: DayData, moduleKey: string): React.ReactNode => {
+      const detailStyle = { paddingLeft: 16, fontSize: 13, lineHeight: 2.2 };
+      const labelStyle = { fontWeight: 600, color: "#4a5b79" };
       if (moduleKey === "speech") {
         const papers = d.speech?.papers || [];
         if (!papers.length && !d.speech?.articleTypes?.length && !d.speech?.wordPairs?.length && !d.speech?.questionTypeSkills?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
@@ -652,65 +948,61 @@ const App: React.FC = () => {
               const totalErr = (p.fillErrorCount || 0) + (p.centerErrorCount || 0);
               const rate = p.totalQuestions > 0 ? Math.round(((p.totalQuestions - totalErr) / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i} className="hist-line">
-                  套卷{i + 1}：正确率：
-                  <Rate r={rate} /> 用时：
-                  <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个
-                  {p.fillErrorCount ? (
-                    <>
-                      <br />
-                      选词填空错：
-                      <Err n={p.fillErrorCount} /> 中心理解错：
-                      <Err n={p.centerErrorCount || 0} /> 总错误：
-                      <Err n={totalErr} />
-                    </>
-                  ) : null}
-                  {p.centerCircleQuestions ? (
-                    <>
-                      <br />⭕ 中心画圈：{p.centerCircleQuestions}
-                    </>
-                  ) : null}
-                  {p.fillErrorQuestions ? (
-                    <>
-                      <br />❌ 选词错题：{p.fillErrorQuestions}
-                    </>
-                  ) : null}
-                  {p.centerErrorQuestions ? (
-                    <>
-                      <br />❌ 中心错题：{p.centerErrorQuestions}
-                    </>
+                <div key={i}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                    套卷{i + 1} {p.name || ""}
+                  </div>
+                  <div style={detailStyle}>
+                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                    {(p.fillErrorCount || p.centerErrorCount) ? (
+                      <span style={{ marginLeft: 12 }}>
+                        <span style={labelStyle}>选词填空错：</span><Err n={p.fillErrorCount || 0} />
+                        <span style={{ marginLeft: 8 }}><span style={labelStyle}>中心理解错：</span><Err n={p.centerErrorCount || 0} /></span>
+                        <span style={{ marginLeft: 8 }}><span style={labelStyle}>总错误：</span><Err n={totalErr} /></span>
+                      </span>
+                    ) : null}
+                  </div>
+                  {(p.centerCircleQuestions || p.fillErrorQuestions || p.centerErrorQuestions) ? (
+                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                      {p.centerCircleQuestions ? <span><span style={labelStyle}>⭕ 中心画圈：</span>{p.centerCircleQuestions}</span> : null}
+                      {p.fillErrorQuestions ? <span><span style={labelStyle}>❌ 选词错题：</span>{p.fillErrorQuestions}</span> : null}
+                      {p.centerErrorQuestions ? <span><span style={labelStyle}>❌ 中心错题：</span>{p.centerErrorQuestions}</span> : null}
+                    </div>
                   ) : null}
                 </div>
               );
             })}
             {d.speech?.articleTypes?.length ? (
-              <div className="hist-line">
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>文章类型错误：</span>
                 {d.speech.articleTypes.map((a, idx) => (
                   <span key={idx} style={{ marginRight: 12 }}>
-                    {ARTICLE_TYPE_MAP[a.type] || "未知"}错误：
-                    <Err n={a.errorCount} />
+                    {ARTICLE_TYPE_MAP[a.type] || "未知"}：<Err n={a.errorCount} />
+                    {a.skill?.trim() ? <> | 技巧：{a.skill}</> : null}
                   </span>
                 ))}
               </div>
             ) : null}
             {SPEECH_ERROR_KEYS.some((k) => (d.speech?.errorTypes?.[k.key] || 0) > 0) ? (
-              <div className="hist-line">
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>错误选项：</span>
                 {SPEECH_ERROR_KEYS.filter((k) => (d.speech?.errorTypes?.[k.key] || 0) > 0).map((k) => (
                   <span key={k.key} style={{ marginRight: 12 }}>
-                    {k.label}
-                    <Err n={d.speech?.errorTypes?.[k.key] || 0} />
+                    {k.label}：<Err n={d.speech?.errorTypes?.[k.key] || 0} />
                   </span>
                 ))}
               </div>
             ) : null}
             {d.speech?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
-              <div className="hist-line">
-                <span style={{ color: HL.key }}>题目类型与技巧：</span>
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>题目类型与技巧：</span>
                 {d.speech.questionTypeSkills
                   .filter((qt) => qt.skill?.trim())
                   .map((qt, idx) => (
                     <div key={idx} style={{ marginLeft: 12 }}>
-                      {QUESTION_TYPE_MAP[qt.questionType] || "未知"}：{qt.skill}
+                      {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
                     </div>
                   ))}
               </div>
@@ -727,41 +1019,49 @@ const App: React.FC = () => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i} className="hist-line">
-                  套卷{i + 1}：正确率：
-                  <Rate r={rate} /> 用时：
-                  <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个 错误个数：
-                  <Err n={p.errorCount} />
-                  {p.circleQuestions ? (
-                    <>
-                      <br />⭕ 画圈：{p.circleQuestions}
-                    </>
-                  ) : null}
-                  {p.wrongQuestions ? (
-                    <>
-                      <br />❌ 错题：{p.wrongQuestions}
-                    </>
-                  ) : null}
-                  {p.starQuestions ? (
-                    <>
-                      <br />
-                      ★：{p.starQuestions}
-                    </>
+                <div key={i}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                    套卷{i + 1} {p.name || ""}
+                  </div>
+                  <div style={detailStyle}>
+                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  </div>
+                  {(p.circleQuestions || p.wrongQuestions || p.starQuestions) ? (
+                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                      {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                    </div>
                   ) : null}
                 </div>
               );
             })}
             {LOGIC_ERROR_KEYS.some((k) => (d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0) > 0) ? (
-              <div className="hist-line">
-                <span style={{ color: HL.key }}>错因：</span>
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>错因：</span>
                 {LOGIC_ERROR_KEYS.filter((k) => (d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0) > 0).map((k) => (
                   <span key={k.key} style={{ marginRight: 12 }}>
-                    {k.key}({k.label})<Err n={d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0} />
+                    {k.key}({k.label})：<Err n={d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0} />
                   </span>
                 ))}
               </div>
             ) : null}
-            {d.logic?.hardestQuestions ? <div className="hist-line">🎯 最难追及：{d.logic.hardestQuestions}</div> : null}
+            {d.logic?.hardestQuestions ? <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}><span style={labelStyle}>🎯 最难追及：</span>{d.logic.hardestQuestions}</div> : null}
+            {d.logic?.questionTypeSkills?.filter((qt) => qt.skill?.trim()).length ? (
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>题目类型与技巧：</span>
+                {d.logic.questionTypeSkills
+                  .filter((qt) => qt.skill?.trim())
+                  .map((qt, idx) => (
+                    <div key={idx} style={{ marginLeft: 12 }}>
+                      {QUESTION_TYPE_MAP[qt.questionType] || qt.questionType}：{qt.skill}
+                    </div>
+                  ))}
+              </div>
+            ) : null}
           </>
         );
       }
@@ -775,33 +1075,29 @@ const App: React.FC = () => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i} className="hist-line">
-                  套卷{i + 1}：正确率：
-                  <Rate r={rate} /> 用时：
-                  <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个 错误个数：
-                  <Err n={p.errorCount} />
-                  {p.circleQuestions ? (
-                    <>
-                      <br />⭕ 画圈：{p.circleQuestions}
-                    </>
-                  ) : null}
-                  {p.wrongQuestions ? (
-                    <>
-                      <br />❌ 错题：{p.wrongQuestions}
-                    </>
-                  ) : null}
-                  {p.starQuestions ? (
-                    <>
-                      <br />
-                      ★：{p.starQuestions}
-                    </>
+                <div key={i}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                    套卷{i + 1} {p.name || ""}
+                  </div>
+                  <div style={detailStyle}>
+                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  </div>
+                  {(p.circleQuestions || p.wrongQuestions || p.starQuestions) ? (
+                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                      {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                    </div>
                   ) : null}
                 </div>
               );
             })}
             {d.figure?.newPatterns?.filter((p) => p.value?.trim()).length ? (
-              <div className="hist-line">
-                新规律：
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>新规律：</span>
                 {d.figure.newPatterns
                   .filter((p) => p.value?.trim())
                   .map((p) => p.value)
@@ -809,8 +1105,8 @@ const App: React.FC = () => {
               </div>
             ) : null}
             {d.figure?.errorPatterns?.filter((p) => p.value?.trim()).length ? (
-              <div className="hist-line">
-                错误规律：
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>错误规律：</span>
                 {d.figure.errorPatterns
                   .filter((p) => p.value?.trim())
                   .map((p) => p.value)
@@ -829,36 +1125,37 @@ const App: React.FC = () => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i} className="hist-line">
-                  套卷{i + 1}：正确率：
-                  <Rate r={rate} /> 用时：
-                  <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个 错误个数：
-                  <Err n={p.errorCount} />
-                  {p.circleQuestions ? (
-                    <>
-                      <br />⭕ 画圈：{p.circleQuestions}
-                    </>
-                  ) : null}
-                  {p.wrongQuestions ? (
-                    <>
-                      <br />❌ 错题：{p.wrongQuestions}
-                    </>
+                <div key={i}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                    套卷{i + 1} {p.name || ""}
+                  </div>
+                  <div style={detailStyle}>
+                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  </div>
+                  {(p.circleQuestions || p.wrongQuestions) ? (
+                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                    </div>
                   ) : null}
                 </div>
               );
             })}
             {d.calc?.errorTypes?.filter((e) => e.type?.trim()).length ? (
-              <div className="hist-line">
-                错误类型：
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>错误类型：</span>
                 {d.calc.errorTypes
                   .filter((e) => e.type?.trim())
-                  .map((e) => `${e.type}:${e.errorCount}题`)
+                  .map((e) => `${e.type}:${e.errorCount}题${e.skill?.trim() ? ` (${e.skill})` : ""}`)
                   .join("  ")}
               </div>
             ) : null}
             {d.calc?.optimizations?.filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps).length ? (
-              <div className="hist-line">
-                <span style={{ color: HL.key }}>计算优化：</span>
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>计算优化：</span>
                 {d.calc.optimizations
                   .filter((o) => o.questionNum || o.originalSteps || o.optimizedSteps)
                   .map((o, idx) => (
@@ -873,62 +1170,41 @@ const App: React.FC = () => {
       }
       if (moduleKey === "number") {
         const papers = d.number?.papers || [];
-        if (!papers.length && !d.number?.errorTypes?.length && !d.number?.skills?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
+        if (!papers.length && !d.number?.errorTypes?.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
         return (
           <>
             {papers.map((p: Paper, i: number) => {
               const correct = p.totalQuestions - p.errorCount;
               const rate = p.totalQuestions > 0 ? Math.round((correct / p.totalQuestions) * 100) : 0;
               return (
-                <div key={i} className="hist-line">
-                  套卷{i + 1}：正确率：
-                  <Rate r={rate} /> 用时：
-                  <Time t={p.timeUsed} /> 总题数：{p.totalQuestions}个 错误个数：
-                  <Err n={p.errorCount} />
-                  {p.circleQuestions ? (
-                    <>
-                      <br />⭕ 画圈：{p.circleQuestions}
-                    </>
-                  ) : null}
-                  {p.guessRightQuestions ? (
-                    <>
-                      <br />
-                      蒙对：{p.guessRightQuestions}
-                    </>
-                  ) : null}
-                  {p.wrongQuestions ? (
-                    <>
-                      <br />❌ 错题：{p.wrongQuestions}
-                    </>
-                  ) : null}
-                  {p.starQuestions ? (
-                    <>
-                      <br />
-                      ★：{p.starQuestions}
-                    </>
+                <div key={i}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                    套卷{i + 1} {p.name || ""}
+                  </div>
+                  <div style={detailStyle}>
+                    <span style={labelStyle}>正确率：</span><Rate r={rate} />
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>用时：</span><Time t={p.timeUsed} /></span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>总题数：</span>{p.totalQuestions}个</span>
+                    <span style={{ marginLeft: 12 }}><span style={labelStyle}>错误个数：</span><Err n={p.errorCount} /></span>
+                  </div>
+                  {(p.circleQuestions || p.guessRightQuestions || p.wrongQuestions || p.starQuestions) ? (
+                    <div style={{ ...detailStyle, display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+                      {p.circleQuestions ? <span><span style={labelStyle}>⭕ 画圈：</span>{p.circleQuestions}</span> : null}
+                      {p.guessRightQuestions ? <span><span style={labelStyle}>蒙对：</span>{p.guessRightQuestions}</span> : null}
+                      {p.wrongQuestions ? <span><span style={labelStyle}>❌ 错题：</span>{p.wrongQuestions}</span> : null}
+                      {p.starQuestions ? <span><span style={labelStyle}>★ 两次错：</span>{p.starQuestions}</span> : null}
+                    </div>
                   ) : null}
                 </div>
               );
             })}
             {d.number?.errorTypes?.filter((e) => e.type?.trim()).length ? (
-              <div className="hist-line">
-                错因：
+              <div className="hist-line" style={{ borderLeft: "3px solid #d6e4ff", paddingLeft: 12, marginLeft: 16, marginTop: 6 }}>
+                <span style={labelStyle}>错因：</span>
                 {d.number.errorTypes
                   .filter((e) => e.type?.trim())
-                  .map((e) => `${e.type}:${e.errorCount}`)
+                  .map((e) => `${e.type}:${e.errorCount}${e.skill?.trim() ? ` (${e.skill})` : ""}`)
                   .join("  ")}
-              </div>
-            ) : null}
-            {d.number?.skills?.filter((s) => s.description?.trim()).length ? (
-              <div className="hist-line">
-                <span style={{ color: HL.key }}>技巧：</span>
-                {d.number.skills
-                  .filter((s) => s.description?.trim())
-                  .map((s, idx) => (
-                    <div key={idx} style={{ marginLeft: 12 }}>
-                      {s.description}
-                    </div>
-                  ))}
               </div>
             ) : null}
           </>
@@ -940,16 +1216,34 @@ const App: React.FC = () => {
         return (
           <>
             {papers.map((p: Paper, i: number) => (
-              <div key={i} className="hist-line">
-                套卷{i + 1}：{p.isOverTime ? "未超时" : p.overTime ? `超时${p.overTime}min` : ""}
-                {p.scoreKeywords ? ` 得分词${p.scoreKeywords}个` : ""}
-                {p.missKeywordsCount ? ` 漏抄${p.missKeywordsCount}个` : ""}
-                {p.missKeywords ? (
-                  <>
-                    <br />
-                    漏抄词：{p.missKeywords}
-                  </>
-                ) : null}
+              <div key={i}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2b4c", marginBottom: 2, padding: "4px 8px", background: "#f0f5ff", borderRadius: 6 }}>
+                  套卷{i + 1} {p.name || ""}
+                </div>
+                <div style={detailStyle}>
+                  {p.isOverTime ? <span style={{ fontSize: 20, fontWeight: 800, color: "#22C55E", letterSpacing: 0.3 }}>未超时</span> : p.overTime ? (
+                    <span>
+                      <span style={labelStyle}>超时</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: "#EF4444", marginLeft: 4, letterSpacing: 0.3 }}>{p.overTime}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>min</span>
+                    </span>
+                  ) : null}
+                  {p.scoreKeywords ? (
+                    <span style={{ marginLeft: 12 }}>
+                      <span style={labelStyle}>得分词：</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: "#22C55E", letterSpacing: 0.3 }}>{p.scoreKeywords}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>个</span>
+                    </span>
+                  ) : null}
+                  {p.missKeywordsCount ? (
+                    <span style={{ marginLeft: 12 }}>
+                      <span style={labelStyle}>漏抄：</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: "#EF4444", letterSpacing: 0.3 }}>{p.missKeywordsCount}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#4B5563", marginLeft: 2 }}>个</span>
+                    </span>
+                  ) : null}
+                </div>
+                {p.missKeywords ? <div style={detailStyle}><span style={labelStyle}>漏抄词：</span>{p.missKeywords}</div> : null}
               </div>
             ))}
           </>
@@ -959,20 +1253,20 @@ const App: React.FC = () => {
         const wps = d.speech?.wordPairs?.filter((wp) => [wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].some(Boolean)) || [];
         if (!wps.length) return <span style={{ color: "#bbb" }}>(无记录)</span>;
         return (
-          <>
+          <div style={{ paddingLeft: 16 }}>
             {wps.map((wp, idx) => (
               <div key={idx} className="hist-line">
                 {[wp.signalWord, wp.selectedWord, wp.compareWord, wp.note].filter(Boolean).join(" / ")}
               </div>
             ))}
-          </>
+          </div>
         );
       }
       return null;
     };
 
     const renderModuleCard = (title: string, moduleKey: string, renderAgg: () => React.ReactNode) => (
-      <Card key={moduleKey} title={title} className="summary-card" size="small">
+      <ModuleCard key={moduleKey} title={title} collapsible>
         {renderAgg()}
         <Divider style={{ margin: "8px 0" }} />
         {allData.map((d) => (
@@ -981,7 +1275,7 @@ const App: React.FC = () => {
             {renderDayDetail(d, moduleKey)}
           </div>
         ))}
-      </Card>
+      </ModuleCard>
     );
 
     return (
@@ -989,6 +1283,7 @@ const App: React.FC = () => {
         {renderModuleCard("🧠 言语理解", "speech", () => {
           const articleAgg: Record<string, number> = {};
           const errorAgg: Record<string, number> = {};
+          const qtAgg: Record<string, number> = {};
           allData.forEach((d) => {
             d.speech?.articleTypes?.forEach((a) => {
               const name = ARTICLE_TYPE_MAP[a.type] || "未知";
@@ -998,39 +1293,66 @@ const App: React.FC = () => {
               const v = d.speech?.errorTypes?.[k.key] || 0;
               if (v) errorAgg[k.label] = (errorAgg[k.label] || 0) + v;
             });
+            d.speech?.questionTypeSkills?.forEach((qt) => {
+              const name = QUESTION_TYPE_MAP[qt.questionType] || qt.questionType;
+              qtAgg[name] = (qtAgg[name] || 0) + 1;
+            });
           });
+          const chipWrap: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, padding: "4px 0 8px 0" };
+          const chipBase: React.CSSProperties = {
+            display: "inline-flex", alignItems: "center",
+            background: "#ffffff", border: "1px solid #E0E7F1",
+            borderRadius: 10, padding: "6px 16px",
+            fontSize: 14, color: "#1E293B", fontWeight: 700
+          };
+          const chipNumBlue = (n: number) => <span style={{ fontSize: 18, fontWeight: 800, color: "#165DFF", marginLeft: 6 }}>{n}</span>;
+          const chipNumRed = (n: number) => <span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{n}</span>;
           return (
             <>
-              <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-                <strong>文章类型：</strong>
-                {Object.entries(articleAgg)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([k, v]) => `${k}:${v}题`)
-                  .join(" · ") || "无"}
-              </div>
-              <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-                <strong>错误选项：</strong>
-                {Object.entries(errorAgg)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([k, v]) => `${k}:${v}次`)
-                  .join(" · ") || "无"}
-              </div>
-              <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-                <strong>题目类型：</strong>
-                {(() => {
-                  const qtAgg: Record<string, number> = {};
-                  allData.forEach((d) => {
-                    d.speech?.questionTypeSkills?.forEach((qt) => {
-                      if (!qt.skill?.trim()) return;
-                      const name = QUESTION_TYPE_MAP[qt.questionType] || "未知";
-                      qtAgg[name] = (qtAgg[name] || 0) + 1;
-                    });
-                  });
-                  return Object.entries(qtAgg)
+              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📝 文章类型</span>
+                  <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#64748B", background: "#EEF2F7", borderRadius: 999 }}>错误分布</span>
+                </div>
+                <div style={chipWrap}>
+                  {Object.entries(articleAgg).length ? Object.entries(articleAgg)
                     .sort((a, b) => b[1] - a[1])
-                    .map(([k, v]) => `${k}:${v}个`)
-                    .join(" · ") || "无";
-                })()}
+                    .map(([k, v]) => (
+                      <div key={k} style={chipBase}>
+                        {k}{chipNumBlue(v)}
+                      </div>
+                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                </div>
+              </div>
+              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>❌ 错误选项</span>
+                </div>
+                <div style={chipWrap}>
+                  {Object.entries(errorAgg).length ? Object.entries(errorAgg)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => (
+                      <div key={k} style={chipBase}>
+                        {k}{chipNumRed(v)}
+                        <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
+                        <span style={{ color: "#64748B", fontWeight: 500 }}>次</span>
+                      </div>
+                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                </div>
+              </div>
+              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📚 题目类型</span>
+                </div>
+                <div style={chipWrap}>
+                  {Object.entries(qtAgg).length ? Object.entries(qtAgg)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => (
+                      <div key={k} style={chipBase}>
+                        {k}{chipNumBlue(v)}
+                      </div>
+                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                </div>
               </div>
             </>
           );
@@ -1050,30 +1372,82 @@ const App: React.FC = () => {
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
           return (
-            <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-              <strong>高频选词TOP10：</strong>
-              {list.length ? list.map((x) => `${x.selectedWord}(${x.count}次)`).join(" · ") : "无"}
+            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>🔤 高频选词</span>
+                <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#64748B", background: "#EEF2F7", borderRadius: 999 }}>TOP 10</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {list.length ? list.map((x) => (
+                  <div key={x.selectedWord} style={{
+                    display: "inline-flex", alignItems: "center",
+                    background: "#ffffff", border: "1px solid #E0E7F1",
+                    borderRadius: 10, padding: "6px 16px",
+                    fontSize: 14, color: "#1E293B", fontWeight: 700
+                  }}>
+                    {x.selectedWord}<span style={{ fontSize: 18, fontWeight: 800, color: "#165DFF", marginLeft: 6 }}>{x.count}</span>
+                    <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
+                    <span style={{ color: "#64748B", fontWeight: 500 }}>次</span>
+                  </div>
+                )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+              </div>
             </div>
           );
         })}
 
         {renderModuleCard("🧩 逻辑判断", "logic", () => {
           const agg: Record<string, number> = {};
+          const qtAgg: Record<string, number> = {};
           allData.forEach((d) => {
             LOGIC_ERROR_KEYS.forEach((k) => {
               const v = d.logic?.errorTypes?.[k.key as keyof typeof d.logic.errorTypes] || 0;
               if (v) agg[k.label] = (agg[k.label] || 0) + v;
             });
+            d.logic?.questionTypeSkills?.forEach((qt) => {
+              const name = QUESTION_TYPE_MAP[qt.questionType] || qt.questionType;
+              qtAgg[name] = (qtAgg[name] || 0) + 1;
+            });
           });
           const total = Object.values(agg).reduce((s, v) => s + v, 0);
+          const chipWrap: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 12, padding: "4px 0 8px 0" };
+          const chipBase: React.CSSProperties = {
+            display: "inline-flex", alignItems: "center",
+            background: "#ffffff", border: "1px solid #E0E7F1",
+            borderRadius: 10, padding: "6px 16px",
+            fontSize: 14, color: "#1E293B", fontWeight: 700
+          };
           return (
-            <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-              <strong>错误类型总数和: {total}</strong>
-              {Object.entries(agg)
-                .sort((a, b) => b[1] - a[1])
-                .map(([k, v]) => `${k}:${v}`)
-                .join(" · ") || "无"}
-            </div>
+            <>
+              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>⚠️ 错因</span>
+                  <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#DC2626", background: "#FEF2F2", borderRadius: 999 }}>总计 {total}</span>
+                </div>
+                <div style={chipWrap}>
+                  {Object.entries(agg).length ? Object.entries(agg)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => (
+                      <div key={k} style={chipBase}>
+                        {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{v}</span>
+                      </div>
+                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                </div>
+              </div>
+              <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📚 题目类型</span>
+                </div>
+                <div style={chipWrap}>
+                  {Object.entries(qtAgg).length ? Object.entries(qtAgg)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => (
+                      <div key={k} style={chipBase}>
+                        {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#165DFF", marginLeft: 6 }}>{v}</span>
+                      </div>
+                    )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+                </div>
+              </div>
+            </>
           );
         })}
 
@@ -1088,13 +1462,40 @@ const App: React.FC = () => {
             });
           });
           return (
-            <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-              {/* <strong>去重: {Object.keys(agg).length}个</strong> */}
-              {Object.entries(agg)
-                .sort((a, b) => b[1].count - a[1].count)
-                .slice(0, 5)
-                .map(([k, v]) => `[${v.type}]${k}(${v.count}次)`)
-                .join(" · ")}
+            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>🎨 规律</span>
+                <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#7C3AED", background: "#F5F3FF", borderRadius: 999 }}>TOP 5</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {Object.entries(agg).length ? Object.entries(agg)
+                  .sort((a, b) => b[1].count - a[1].count)
+                  .slice(0, 5)
+                  .map(([k, v]) => {
+                    const isNew = v.type === "新规律";
+                    return (
+                      <div key={k} style={{
+                        display: "inline-flex", alignItems: "center",
+                        background: "#ffffff",
+                        border: `1px solid ${isNew ? "#BBF7D0" : "#FECACA"}`,
+                        borderRadius: 10, padding: "6px 16px",
+                        fontSize: 14, color: "#1E293B", fontWeight: 700
+                      }}>
+                        <span style={{
+                          display: "inline-block",
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          marginRight: 8,
+                          fontWeight: 700,
+                          background: isNew ? "#DCFCE7" : "#FEE2E2",
+                          color: isNew ? "#15803D" : "#B91C1C"
+                        }}>{v.type}</span>
+                        {k}<span style={{ fontSize: 18, fontWeight: 800, color: isNew ? "#22C55E" : "#EF4444", marginLeft: 6 }}>{v.count}</span>
+                      </div>
+                    );
+                  }) : <span style={{ color: "#B0B8C4" }}>无</span>}
+              </div>
             </div>
           );
         })}
@@ -1107,11 +1508,26 @@ const App: React.FC = () => {
             });
           });
           return (
-            <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-              {Object.entries(agg)
-                .sort((a, b) => b[1] - a[1])
-                .map(([k, v]) => `${k}:${v}题`)
-                .join(" · ") || "无"}
+            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>❌ 错误类型</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {Object.entries(agg).length ? Object.entries(agg)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([k, v]) => (
+                    <div key={k} style={{
+                      display: "inline-flex", alignItems: "center",
+                      background: "#ffffff", border: "1px solid #E0E7F1",
+                      borderRadius: 10, padding: "6px 16px",
+                      fontSize: 14, color: "#1E293B", fontWeight: 700
+                    }}>
+                      {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{v}</span>
+                      <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
+                      <span style={{ color: "#64748B", fontWeight: 500 }}>题</span>
+                    </div>
+                  )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+              </div>
             </div>
           );
         })}
@@ -1123,15 +1539,25 @@ const App: React.FC = () => {
               if (e.type) agg[e.type] = (agg[e.type] || 0) + e.errorCount;
             });
           });
-          // const total = Object.values(agg).reduce((s, v) => s + v, 0);
           return (
-            <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-              <strong>类型错误</strong>
-              {/* <br /> */}
-              {Object.entries(agg)
-                .sort((a, b) => b[1] - a[1])
-                .map(([k, v]) => `${k}:${v}`)
-                .join("   ") || "无"}
+            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>⚠️ 错因</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {Object.entries(agg).length ? Object.entries(agg)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([k, v]) => (
+                    <div key={k} style={{
+                      display: "inline-flex", alignItems: "center",
+                      background: "#ffffff", border: "1px solid #E0E7F1",
+                      borderRadius: 10, padding: "6px 16px",
+                      fontSize: 14, color: "#1E293B", fontWeight: 700
+                    }}>
+                      {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", marginLeft: 6 }}>{v}</span>
+                    </div>
+                  )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+              </div>
             </div>
           );
         })}
@@ -1152,9 +1578,25 @@ const App: React.FC = () => {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
           return (
-            <div className="summary-row" style={{ background: "#f8fafc", padding: 8, borderRadius: 8, marginBottom: 8 }}>
-              <strong>Top 漏抄词:</strong>
-              {top10.map(([k, v]) => `${k}(${v}次)`).join(" · ") || "无"}
+            <div style={{ background: "#ffffff", border: "1px solid #E8EEF7", borderRadius: 14, padding: "14px 16px", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: "#1E293B" }}>📝 漏抄词</span>
+                <span style={{ display: "inline-block", padding: "2px 10px", fontSize: 12, fontWeight: 500, color: "#C2410C", background: "#FFF7ED", borderRadius: 999 }}>TOP 10</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {top10.length ? top10.map(([k, v]) => (
+                  <div key={k} style={{
+                    display: "inline-flex", alignItems: "center",
+                    background: "#ffffff", border: "1px solid #FED7AA",
+                    borderRadius: 10, padding: "6px 16px",
+                    fontSize: 14, color: "#1E293B", fontWeight: 700
+                  }}>
+                    {k}<span style={{ fontSize: 18, fontWeight: 800, color: "#FA8C16", marginLeft: 6 }}>{v}</span>
+                    <span style={{ margin: "0 6px", color: "#C7CCD4" }}>·</span>
+                    <span style={{ color: "#64748B", fontWeight: 500 }}>次</span>
+                  </div>
+                )) : <span style={{ color: "#B0B8C4" }}>无</span>}
+              </div>
             </div>
           );
         })}
@@ -1168,13 +1610,13 @@ const App: React.FC = () => {
       label: "今日输入",
       children: (
         <div>
-          <SpeechSection data={todayData.speech} onChange={updateSpeech} />
-          <WordPairSection wordPairs={todayData.speech.wordPairs || []} onChange={(wps) => updateSpeech({ ...todayData.speech, wordPairs: wps })} />
-          <LogicSection data={todayData.logic} onChange={updateLogic} />
-          <FigureSection data={todayData.figure} onChange={updateFigure} />
-          <CalcSection data={todayData.calc} onChange={updateCalc} />
-          <NumberSection data={todayData.number} onChange={updateNumber} />
-          <EssaySection data={todayData.essay} onChange={updateEssay} />
+          <SpeechSection data={todayData.speech} onChange={updateSpeech} onSave={handleSave} />
+          <WordPairSection wordPairs={todayData.speech.wordPairs || []} onChange={(wps) => updateSpeech({ ...todayData.speech, wordPairs: wps })} onSave={handleSave} />
+          <LogicSection data={todayData.logic} onChange={updateLogic} onSave={handleSave} />
+          <FigureSection data={todayData.figure} onChange={updateFigure} onSave={handleSave} />
+          <CalcSection data={todayData.calc} onChange={updateCalc} onSave={handleSave} />
+          <NumberSection data={todayData.number} onChange={updateNumber} onSave={handleSave} />
+          <EssaySection data={todayData.essay} onChange={updateEssay} onSave={handleSave} />
           <div className="tip-bar" style={{ marginTop: 16, marginBottom: 16 }}>
             ⭕ 画圈 = 做题时"不太确定/二选一纠结"（含对/错）&nbsp;&nbsp;❌ 错题 = 答案直接选错
             <br />
@@ -1188,6 +1630,19 @@ const App: React.FC = () => {
             <Button icon={<ExportOutlined />} onClick={handleExport} size="large">
               导出所有数据
             </Button>
+            <Button icon={<FileTextOutlined />} onClick={handleExportJson} size="large">
+              导出JSON
+            </Button>
+            <Button icon={<ImportOutlined />} onClick={handleImportJson} size="large">
+              导入JSON
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
             <Button icon={<DownloadOutlined />} onClick={handleDownload} size="large">
               下载TXT
             </Button>
@@ -1223,6 +1678,24 @@ const App: React.FC = () => {
       <div className="app-header">
         <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} size="large" style={{ color: "#fff" }} tabBarStyle={{ color: "#fff" }} />
       </div>
+      <Modal
+        title="导入数据预览"
+        open={importVisible}
+        onCancel={() => { setImportVisible(false); setImportData(null); }}
+        footer={[
+          <Button key="close" onClick={() => { setImportVisible(false); setImportData(null); }}>
+            取消
+          </Button>,
+          <Button key="confirm" type="primary" onClick={handleConfirmImport}>
+            确认导入
+          </Button>,
+        ]}
+        width={900}
+      >
+        <div style={{ maxHeight: "60vh", overflow: "auto" }}>
+          {importData ? renderCompare(Object.values(importData).sort((a, b) => a.date.localeCompare(b.date))) : null}
+        </div>
+      </Modal>
       <Modal
         title="导出数据预览"
         open={exportVisible}

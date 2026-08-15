@@ -1,5 +1,6 @@
 export interface Paper {
   id: string;
+  name?: string;
   totalQuestions: number;
   timeUsed: number;
   errorCount: number;
@@ -26,6 +27,7 @@ export interface ArticleTypeError {
   id: string;
   type: number;
   errorCount: number;
+  skill?: string;
 }
 
 export interface ErrorTypeItem {
@@ -63,6 +65,7 @@ export interface CalcErrorType {
   id: string;
   type: string;
   errorCount: number;
+  skill?: string;
 }
 
 export interface CalcOptimization {
@@ -76,16 +79,12 @@ export interface NumberErrorType {
   id: string;
   type: string;
   errorCount: number;
-}
-
-export interface Skill {
-  id: string;
-  description: string;
+  skill?: string;
 }
 
 export interface QuestionTypeSkill {
   id: string;
-  questionType: number;
+  questionType: string;
   skill: string;
 }
 
@@ -101,6 +100,7 @@ export interface LogicModule {
   papers: Paper[];
   errorTypes: LogicErrorTypes;
   hardestQuestions: string;
+  questionTypeSkills: QuestionTypeSkill[];
 }
 
 export interface FigureModule {
@@ -118,7 +118,6 @@ export interface CalcModule {
 export interface NumberModule {
   papers: Paper[];
   errorTypes: NumberErrorType[];
-  skills: Skill[];
 }
 
 export interface EssayModule {

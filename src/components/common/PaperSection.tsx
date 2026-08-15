@@ -31,18 +31,18 @@ export function PaperSection({ papers, onChange, extraFields }: PaperSectionProp
             value={paper.totalQuestions}
             onChange={(v) => onUpdate({ ...paper, totalQuestions: v || 0 })}
             min={0}
-            size="small"
+            
             style={{ width: 70 }}
           />
           <label style={{ marginLeft: 8 }}>推荐用时: {paper.totalQuestions}min</label>
           <label style={{ marginLeft: 12 }}>用时(min)</label>
-          <InputNumber value={paper.timeUsed} onChange={(v) => onUpdate({ ...paper, timeUsed: v || 0 })} min={0} size="small" style={{ width: 70 }} />
+          <InputNumber value={paper.timeUsed} onChange={(v) => onUpdate({ ...paper, timeUsed: v || 0 })} min={0}  style={{ width: 70 }} />
           <label style={{ marginLeft: 12 }}>错误个数</label>
           <InputNumber
             value={paper.errorCount}
             onChange={(v) => onUpdate({ ...paper, errorCount: v || 0 })}
             min={0}
-            size="small"
+            
             style={{ width: 70 }}
           />
         </div>
@@ -52,7 +52,7 @@ export function PaperSection({ papers, onChange, extraFields }: PaperSectionProp
             value={paper.circleQuestions}
             onChange={(e) => onUpdate({ ...paper, circleQuestions: e.target.value })}
             placeholder="题号"
-            size="small"
+            
             style={{ width: 120 }}
           />
           <label style={{ marginLeft: 12 }}>❌ 错题</label>
@@ -60,7 +60,7 @@ export function PaperSection({ papers, onChange, extraFields }: PaperSectionProp
             value={paper.wrongQuestions}
             onChange={(e) => onUpdate({ ...paper, wrongQuestions: e.target.value })}
             placeholder="题号"
-            size="small"
+            
             style={{ width: 120 }}
           />
           <label style={{ marginLeft: 12 }}>★ (两次都错)</label>
@@ -68,7 +68,7 @@ export function PaperSection({ papers, onChange, extraFields }: PaperSectionProp
             value={paper.starQuestions}
             onChange={(e) => onUpdate({ ...paper, starQuestions: e.target.value })}
             placeholder="题号"
-            size="small"
+            
             style={{ width: 120 }}
           />
         </div>

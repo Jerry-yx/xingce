@@ -1,5 +1,6 @@
 import React from "react";
-import { InputNumber, Input, Checkbox } from "antd";
+import { InputNumber, Input, Checkbox, Button } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import { DynamicList } from "../common/DynamicList";
 import { ModuleCard } from "../common/ModuleCard";
 import type { EssayModule, Paper } from "../../types";
@@ -7,10 +8,11 @@ import type { EssayModule, Paper } from "../../types";
 interface EssaySectionProps {
   data: EssayModule;
   onChange: (data: EssayModule) => void;
+  onSave?: () => void;
 }
 
-export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange }) => (
-  <ModuleCard title="📝 申论对策">
+export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange, onSave }) => (
+  <ModuleCard title="📝 申论对策" headerExtra={onSave ? <Button type="text"  icon={<SaveOutlined />} onClick={onSave}>保存</Button> : undefined} collapsible defaultCollapsed>
     <h4 style={{ marginBottom: 8, color: "#1a2b4c" }}>套卷总体情况</h4>
     <DynamicList
       items={data.papers}
@@ -33,6 +35,13 @@ export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange }) =>
         <div className="paper-item">
           <div className="paper-header">
             <span className="paper-title">套卷 {i + 1}</span>
+            <Input
+              value={paper.name || ''}
+              onChange={(e) => onUpdate({ ...paper, name: e.target.value })}
+              placeholder="套卷名称"
+              
+              style={{ width: 140, marginLeft: 8 }}
+            />
           </div>
           <div className="field-grid">
             <div className="field-cell">
@@ -48,7 +57,7 @@ export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange }) =>
                   value={paper.overTime}
                   onChange={(e) => onUpdate({ ...paper, overTime: e.target.value })}
                   placeholder="min"
-                  size="small"
+                  
                   className="field-input"
                 />
               </div>
@@ -59,7 +68,7 @@ export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange }) =>
                 value={paper.scoreKeywords}
                 onChange={(v) => onUpdate({ ...paper, scoreKeywords: v || 0 })}
                 min={0}
-                size="small"
+                
                 className="field-input"
               />
             </div>
@@ -69,7 +78,7 @@ export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange }) =>
                 value={paper.missKeywordsCount}
                 onChange={(v) => onUpdate({ ...paper, missKeywordsCount: v || 0 })}
                 min={0}
-                size="small"
+                
                 className="field-input"
               />
             </div>
@@ -82,7 +91,7 @@ export const EssaySection: React.FC<EssaySectionProps> = ({ data, onChange }) =>
               value={paper.missKeywords}
               onChange={(e) => onUpdate({ ...paper, missKeywords: e.target.value })}
               placeholder="漏抄关键词，逗号分隔"
-              size="small"
+              
               className="field-input"
             />
           </div>

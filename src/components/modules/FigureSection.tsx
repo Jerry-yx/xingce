@@ -1,5 +1,6 @@
 import React from "react";
-import { InputNumber, Input } from "antd";
+import { InputNumber, Input, Button } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import { DynamicList } from "../common/DynamicList";
 import { HistorySelect } from "../common/HistorySelect";
 import { ModuleCard, AccuracyBadge } from "../common/ModuleCard";
@@ -9,12 +10,13 @@ import { getAllFigurePatterns } from "../../utils/storage";
 interface FigureSectionProps {
   data: FigureModule;
   onChange: (data: FigureModule) => void;
+  onSave?: () => void;
 }
 
-export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) => {
+export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange, onSave }) => {
   const patternOptions = getAllFigurePatterns();
   return (
-    <ModuleCard title="🎨 图推">
+    <ModuleCard title="🎨 图推" headerExtra={onSave ? <Button type="text"  icon={<SaveOutlined />} onClick={onSave}>保存</Button> : undefined} collapsible defaultCollapsed>
       <div className="module-layout">
         <div className="module-left">
           <h4 style={{ marginBottom: 8, color: "#1a2b4c" }}>套卷总体情况</h4>
@@ -34,6 +36,13 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
               <div className="paper-item">
                 <div className="paper-header">
                   <span className="paper-title">套卷 {i + 1}</span>
+                  <Input
+                    value={paper.name || ''}
+                    onChange={(e) => onUpdate({ ...paper, name: e.target.value })}
+                    placeholder="套卷名称"
+                    
+                    style={{ width: 140, marginLeft: 8 }}
+                  />
                   <AccuracyBadge correct={paper.totalQuestions - paper.errorCount} total={paper.totalQuestions} />
                 </div>
                 <div className="field-grid">
@@ -43,7 +52,7 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
                       value={paper.totalQuestions}
                       onChange={(v) => onUpdate({ ...paper, totalQuestions: v || 0 })}
                       min={0}
-                      size="small"
+                      
                       className="field-input"
                     />
                   </div>
@@ -53,7 +62,7 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
                       value={paper.timeUsed}
                       onChange={(v) => onUpdate({ ...paper, timeUsed: v || 0 })}
                       min={0}
-                      size="small"
+                      
                       className="field-input"
                     />
                   </div>
@@ -67,7 +76,7 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
                       value={paper.errorCount}
                       onChange={(v) => onUpdate({ ...paper, errorCount: v || 0 })}
                       min={0}
-                      size="small"
+                      
                       className="field-input"
                     />
                   </div>
@@ -77,7 +86,7 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
                       value={paper.circleQuestions}
                       onChange={(e) => onUpdate({ ...paper, circleQuestions: e.target.value })}
                       placeholder="题号"
-                      size="small"
+                      
                       className="field-input"
                     />
                   </div>
@@ -87,7 +96,7 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
                       value={paper.wrongQuestions}
                       onChange={(e) => onUpdate({ ...paper, wrongQuestions: e.target.value })}
                       placeholder="题号"
-                      size="small"
+                      
                       className="field-input"
                     />
                   </div>
@@ -97,7 +106,7 @@ export const FigureSection: React.FC<FigureSectionProps> = ({ data, onChange }) 
                       value={paper.starQuestions}
                       onChange={(e) => onUpdate({ ...paper, starQuestions: e.target.value })}
                       placeholder="题号"
-                      size="small"
+                      
                       className="field-input"
                     />
                   </div>
